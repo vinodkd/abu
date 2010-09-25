@@ -1,0 +1,34 @@
+/*
+digraph job1{
+	input_data [shape=Mrecord, label="<key> k1\:type|<value> v1\:type"]
+	subgraph clustermapreduce_n1{
+		mr_map1[shape=box label="map using mapClassname"]
+		mr_red1[shape=box label="reduce using redClassname"]
+	label="mr1"
+	}
+	subgraph clustermapreduce_n2{
+		mr_map2[shape=box label="map using mapClassname"]
+		mr_red2[shape=box label="reduce using redClassname"]
+	label="mr2"
+	}
+
+	output_data [shape=Mrecord, label="<key> k3\:type|<value> v3\:type"]
+	input_data -> mr_map1 -> mr_red1 -> output_data
+	input_data -> mr_map2 -> mr_red2 -> output_data
+	mr_map1 -> mr_red2
+	mr_map2 -> mr_red1
+}
+*/
+
+digraph job2{
+	input [shape=Mrecord, label="k1\:type|v1\:type"]
+	m1 [label="map using mapClassname"]
+	m1_in [shape=Mrecord label="k1\:type|v1\:type"]
+	input -> m1_in
+	m1_in -> m1
+	m1_out [shape=Mrecord label="k2\:type|v2\:type"]
+	m1 -> m1_out
+	//reduce using redClassname (k1:type,v1:type) -> (k2:type,v2:type)
+	output [shape=Mrecord, label="k3\:type|v3\:type"]
+	
+}

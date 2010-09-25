@@ -1,0 +1,45 @@
+digraph G{
+	node[shape=box]
+	subgraph inputSG{
+		rank=same
+		input[shape=Mrecord, label="{/path/to/file.ext|{k1:type|v1:type}}"]
+		DataReaderClassName [shape=component]
+
+		input -> DataReaderClassName [label="using"]
+	}
+	subgraph clustermapSG{
+		map1input [shape=Mrecord label="<inp> k1:type|v1:type"]
+		map1 [label="map", shape=plaintext]
+		map1output [shape=Mrecord label="<outp> k2:type|v2:type"]
+		mapClassName[shape=component]
+		{rank=same;map1;mapClassName}
+
+		map1input -> map1 [style=invis] 
+		map1 -> map1output[style=invis]
+		map1 -> mapClassName
+	}
+	subgraph clusterreduceSG{
+		reduce1input [shape=Mrecord label="<inp> k1:type|v1:type"]
+		reduce1 [label="reduce", shape=plaintext]
+		reduce1output [shape=Mrecord label="<outp> k2:type|v2:type"]
+		reduceClassName[shape=component]
+		{rank=same;reduce1;reduceClassName}
+
+		reduce1input -> reduce1 [style=invis]
+		reduce1-> reduce1output [style=invis]
+		reduce1 -> reduceClassName
+	}
+	subgraph outputSG{
+		rank=same
+		output[shape=Mrecord, label="{/path/to/file.ext|{k4:type|v4:type}}"]
+		DataWriterClassName [shape=component]
+
+		output -> DataWriterClassName [label="using"]
+		}
+
+	input -> map1input[lhead=clustermapSG] 
+	map1output -> reduce1input[lhead=reduceSG] 
+	reduce1output -> output[lhead=outputSG]
+
+	label=Job1
+}

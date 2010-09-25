@@ -1,0 +1,23 @@
+digraph G {
+	node [shape=box]
+	rankdir=LR
+
+	input
+	subgraph clustermap{
+		map1
+		map2
+		map3
+	}
+	partition
+	subgraph clusterreduce{
+		reduce1
+		reduce2
+	}
+	output
+
+	input -> map1[lhead=clustermap]
+	map3 -> combine[ltail=clustermap]
+	combine -> partition
+	partition -> reduce1[lhead=clusterreduce]
+	reduce2 -> output[ltail=clusterreduce]
+}

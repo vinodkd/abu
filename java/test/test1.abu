@@ -1,0 +1,11 @@
+job job1:
+	read
+	map
+	reduce
+	mapreduce
+	write
+
+mapreduce mr1:
+	map
+	reduce
+

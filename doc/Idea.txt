@@ -1,0 +1,92 @@
+Abu: A scripting language for Hadoop
+=====================================
+Abu is a language that helps in writing Hadoop map reduce jobs by extracting out the essence of the map reduce logic into a DSL.
+Scripts written in the abu DSL can then be:
+	- "compiled" into standard java boilerplate to be run on hadoop
+	- visualized using Graphviz
+	
+Abu achieves both goals by generating text - java in the case of "compile" and graphviz source files (in dot format) in the case of "visualize"; so its less of a true DSL, and more of a code generator. However, it helps to think of it in terms of a scripting language as the expectation is that you'd spend most of your "map reduce logic and flow planning" time in abu rather than in java boilerplate land.
+
+Abu does require you to know about Hadoop, and actually is intended as a learning tool for Hadoop; not a replacement. It in fact started as a personal attempt at grokking map reduce at a high level while learning Hadoop. Abu is not turing complete and doesnt allow definition of the actual map and reduce functions themselves - just their interface contracts and how they combine with each other. Abu output will therefore contain skeletons of the map and reduce functions, and you will still have to fill them in.
+
+Having said that, its conceivable that some point in the future it does allow such definition, specifically via the (J)Ruby syntax.How this will actually work - TBD
+
+Goals:
+======
+- no boilerplate, just the core logic
+- still looks like map reduce, ie, not high level like Pig
+- can generate boilerplate on request
+- generate dot format output so that it can be easily visualized
+- analyes i/o and ensures correctness at dsl level
+
+- repl? dont know yet
+
+Sample scripts[Design]:
+======================
+1. Simple job:
+
+job job1:
+	read 	(k1:type,v1:type) from "/path/to/file.ext" 	using DataReaderClassName
+	map 	(k1:type,v1:type) to 	(k2:type,v2:type) 	using mapClassname 
+	reduce 	(k2:type,v2:type) to 	(k2:type,v2:type) 	using redClassname
+	write 	(k3:type,v3:type) to 	"/path/to/file.ext" 	using DataWriterClassName
+
+2. Simple job with mapred abstracted out and named:
+job job1:
+	read 	(k1:type,v1:type) from "/path/to/file.ext" 	using DataReaderClassName
+	mr1	(k1:type,v1:type) to 	(k3:type,v3:type)
+	write 	(k3:type,v3:type) to 	"/path/to/file.ext" 	using DataWriterClassName
+
+mapreduce mr1:
+	map 	(k1:type,v1:type) to 	(k2:type,v2:type) 	using mapClassname 
+	reduce 	(k2:type,v2:type) to 	(k2:type,v2:type) 	using redClassname
+
+3. Chained job:
+
+job job1:
+	read 	(k1:type,v1:type) from "/path/to/file.ext" 	using DataReaderClassName
+	mr1	(k1:type,v1:type) to 	(k3:type,v3:type)
+	mr2	(k3:type,v3:type) to 	(k5:type,v5:type)
+	write 	(k5:type,v5:type) to 	"/path/to/file.ext" 	using DataWriterClassName
+// mr1 same as before
+mapreduce mr2:
+	map 	(k3:type,v3:type) to 	(k4:type,v4:type) 	using mapClassname 
+	reduce 	(k4:type,v4:type) to 	(k5:type,v5:type) 	using redClassname
+
+4. mapred defn with optional reducer:
+mapreduce mr34:
+	map 	(k3:type,v3:type) to 	(k4:type,v4:type) 	using mapClassname 
+
+5. mapred defn with optional mapper:
+mapreduce mr43:
+	reduce 	(k4:type,v4:type) to 	(k5:type,v5:type) 	using redClassname
+
+6. Tuple definitions: 
+	- Dont care value in tuple: (_, field2, field 3)
+	- List of objects of a type: [type] or [var] where var of type 'type'
+	- 
+
+
+Roadmap:
+=================
+Milestone 1 (v 0.1):
+	- build parser: Basic parser done. Recognizes the keyword and basic structure expected.
+Milestone 2 (v 0.2):
+	- build (j)ruby parser + generator + visualizer (no validation or 'smarts')
+Milestone 3 (v 0.3):
+	- build java code generator
+	- build java visualizer
+Milestone 4:
+	- evaluate jruby implementation of full scripting language.
+	- decide on which of two versions to continue, or if both should.
+Milestone 5 (v 0.4):
+	- build analyzer (aka 'smarts' and/or validation). This is where the tuple definitions mentioned in Design #6 would matter.
+Milestone 6:
+	- Test out on at least 10 basic samples from the Hadoop Definitive Guide or Hadoop in Action, generate code and viz
+Milestone 7 (v 1.0):
+	- Validate (j)ruby version and release.
+Milestone 8 (v 1.1):
+	- Validate java version and release
+
+
+

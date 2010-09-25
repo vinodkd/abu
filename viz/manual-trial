@@ -1,0 +1,58 @@
+/*
+job job1:
+	read 	(k1:type,v1:type) from "/path/to/file.ext" 	using DataReaderClassName
+	map 	(k1:type,v1:type) to 	(k2:type,v2:type) 	using mapClassname 
+	reduce 	(k2:type,v2:type) to 	(k2:type,v2:type) 	using redClassname
+	write 	(k3:type,v3:type) to 	"/path/to/file.ext" 	using DataWriterClassName
+
+*/
+digraph G {
+	compound=true
+	node [shape=box]
+	/*read 	(k1:type,v1:type) from "/path/to/file.ext" 	using DataReaderClassName */
+	{
+		rank=same
+		input[shape=Mrecord, label="{/path/to/file.ext|{k1:type|v1:type}}"]
+		DataReaderClassName [shape=component]
+	}
+	input -> DataReaderClassName [label="using"]
+
+	/* 	map 	(k1:type,v1:type) to 	(k2:type,v2:type) 	using mapClassname 
+	input -> map [headlabel="k1:type,v1:type"]
+	map -> output[taillabel="k2:type,v2:type"]
+
+	map[shape=Mrecord, label="{{<inp> k1:type|v1:type}|map|||{k2:type|v2:type}}"]
+	input -> map.inp
+	*/
+
+	subgraph clustermap1{
+		map1input [shape=Mrecord label="<inp> k1:type|v1:type"]
+		map1 [label="map", shape=plaintext]
+		map1output [shape=Mrecord label="<outp> k2:type|v2:type"]
+
+		map1input -> map1 -> map1output
+	};
+	mapClassName[shape=component]
+	{rank=same;map1input; mapClassName;}
+	map1input -> mapClassName [label="using" ltail=clustermap1]
+
+	input -> map1input[lhead=clustermap1]
+
+/*	reduce 	(k2:type,v2:type) to 	(k2:type,v2:type) 	using redClassname
+*/
+	subgraph clusterred1{
+		red1input [shape=Mrecord label="<inp> k2:type|v2:type"]
+		red1 [label="reduce", shape=plaintext]
+		red1output [shape=Mrecord label="<outp> k2:type|v2:type"]
+
+		red1input -> red1 -> red1output
+	};
+	redClassName[shape=component]
+	{rank=same;red1input; redClassName;}
+	red1input -> redClassName [label="using" ltail=clusterred1]
+	
+	map1output -> red1input [ltail=clustermap1, lhead=clusterred1]
+	red1output -> output[ltail=clusterred1]
+
+	label = "Job1"
+}
