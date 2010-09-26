@@ -65,17 +65,17 @@ class Abu
 	end
 
 	def read(key, value, from, using)
-		appy_template_and_assign :reader, Templates::READER
+		appy_template_and_assign :reader, Templates::READER, key, value, from, using
 	end
 
 	def map(key1, value1, key2, value2, using)
-		appy_template_and_assign :mapper, Templates::MAPPER
-		appy_template_and_assign :exec_mapper, Templates::EXEC_MAPPER
+		appy_template_and_assign :mapper, Templates::MAPPER, key1, value1, key2, value2, using
+		appy_template_and_assign :exec_mapper, Templates::EXEC_MAPPER, key1, value1, key2, value2, using
 	end
 
 	def reduce(key2, listOfvalue2, key3, value3, using)
-		appy_template_and_assign :reducer, Templates::REDUCER
-		appy_template_and_assign :exec_reducer, Templates::EXEC_REDUCER
+		appy_template_and_assign :reducer, Templates::REDUCER, key2, listOfvalue2, key3, value3, using
+		appy_template_and_assign :exec_reducer, Templates::EXEC_REDUCER, key2, listOfvalue2, key3, value3, using
 	end
 
 	def exec(name,key1, value1, key3, value3)
@@ -84,7 +84,7 @@ class Abu
 	end
 	
 	def write(key, value, to, using)
-		appy_template_and_assign :writer, Templates::WRITER
+		appy_template_and_assign :writer, Templates::WRITER, key, value, to, using
 	end
 
 	def appy_template_and_assign(section,template,*attrs)
@@ -124,16 +124,16 @@ static class #{@context}Reducer extends Reducer<#{attrs[0]},#{attrs[1]},#{attrs[
 |
 	READER=%q|
 		//TODO: replace args ref to actual file path provided in script
-		FileInputFormat.addInputPath(job, new Path(args[0]));
+		FileInputFormat.addInputPath(job, new Path('#{attrs[2]}'));
 |
 
 	EXEC_MAPPER='\n\t\tjob.setMapperClass(#{@context}Mapper.class);'
 	EXEC_REDUCER='\n\t\tjob.setReducerClass(#{@context}Reducer.class);'
 
 	WRITER=%q|	
-		FileOutputFormat.setOutputPath(job, new Path(args[1]));
-		job.setOutputKeyClass(Text.class);
-		job.setOutputValueClass(IntWritable.class);
+		FileOutputFormat.setOutputPath(job, new Path('#{attrs[2]}'));
+		job.setOutputKeyClass('#{attrs[0]}'.class);
+		job.setOutputValueClass('#{attrs[1]}'.class);
 |
 
 	JOB_MAIN_BOTTOM=%q|
