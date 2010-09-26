@@ -1,2 +1,4 @@
 # Ignore class files
 *.class
+# Ignore textpad workspace files.
+*.tws
