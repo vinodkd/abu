@@ -17,7 +17,7 @@ Goals:
 - still looks like map reduce, ie, not high level like Pig
 - can generate boilerplate on request
 - generate dot format output so that it can be easily visualized
-- analyes i/o and ensures correctness at dsl level
+- analyses i/o and ensures correctness at dsl level
 
 - repl? dont know yet
 
@@ -64,11 +64,9 @@ mapreduce mr43:
 6. Tuple definitions: 
 	- Dont care value in tuple: (_, field2, field 3)
 	- List of objects of a type: [type] or [var] where var of type 'type'
-	- 
-
 
 Roadmap:
-=================
+========
 Milestone 1 (v 0.1):
 	- build parser: Basic parser done. Recognizes the keyword and basic structure expected.
 Milestone 2 (v 0.2):
@@ -88,5 +86,12 @@ Milestone 7 (v 1.0):
 Milestone 8 (v 1.1):
 	- Validate java version and release
 
+Ideas for future features:
+=========================
+- ability to include scripts
+- ability to have "dont care" values for keys and/or values. Came accross this when evaluating the log processing scenario, but more analysis tbd
 
-
+About the name
+==============
+I first intended to name this tool Ankush - the sanskrit name for the tool that real mahouts use to control elephants, especially as it made sense to me - this was a tool to help me understand and control the hadoop elephant. Another thought was to name it using the Doug Cutting Method(TM) - by asking my kids for one. That backfired because I couldnt get anything coherent (or sufficiently cute) even out of my 3.5 yr old. 
+So I started looking at elephants that kids knew about. Dumbo seemed somehow inappropriate, but Abu the monkey-turned-elephant from Alladin seemed to fit. So there you go :)
