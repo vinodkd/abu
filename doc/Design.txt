@@ -1,3 +1,4 @@
+NOTE: SET YOUR EDITOR TO WRAP TEXT - DOCUMENT WRITTEN WITH HARD BREAKS ONLY AT SENTENCE END.
 Abu Solution Design
 ===================
 Grammar:
@@ -68,17 +69,32 @@ The intention at this point is to continue both java and (j)ruby development in 
 Implementation Design
 =====================
 
-Ruby
-----
+Overall Algorithm:
+-----------------
+### Parse:
+
+1. Parse the input file into a parse tree
+2. In parallel, maintain a table of mapreduce jobs references so that they can be mapped to their definitions. The table should have hte following structure: (mapredname, refFound?,defnFound?)
+3. After the parse process, check the ref table.
+	a. If there's any name with a refFound and no defnFound, throw an error as this is a mapred job without a definition
+	b. If there's any name with a defnFound and no refFound, throw a warning that a job is unused.
+4. <<Insert logic to check if the chaining of keys and values match up here>>. We dont support includes yet.
+
+# Generate:
+1. 
+
+Ruby Specifics
+--------------
 Class Abu:
 	parse		: private method that takes the dsl and "understands" it
 	generate	: method that generates java code from the dsl that was parsed
 	visualize	: method that generates graphviz dot format output from the dsl that was parsed.
 	run		: future method that will allow actual running of the script as is
 
+Note to self: The "parser" can be made a validating one - in then sense of 'read' can show up only under 'job' - by making each parent 'method' a class on its own, and making the valid methods instance_eval'd (or class_eval'd) in that class
 	
-Java
------
+Java Specifics
+--------------
 Class Abu		: main runner
 	generate	: method that generates java code from the DSL that was input
 	visualize	: method that generates graphviz dot format output from the dsl that was input
@@ -86,3 +102,4 @@ Class Abu		: main runner
 Class AbuParser		: Parboiled-based PEG parser for Round 2 syntax
 Class JavaGenerator	: Generator for Java classes
 Class DotGenerator	: Generator for dot output
+
