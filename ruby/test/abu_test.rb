@@ -1,6 +1,6 @@
 require '../src/abu.rb'
 
-Abu.generate('./out') do
+s1= Abu.script do
 	job 'job3' do
 		read 'LongWritable','Text','/path/to/file.ext', 'DataReaderClassName'
 		exec 'mr1','LongWritable','Text','Text', 'IntWritable'
@@ -12,3 +12,6 @@ Abu.generate('./out') do
 		reduce 'k2','v2', 'k3','v3', 'reducer'
 	end
 end
+
+s1.generate('./out')
+s1.visualize('./out')

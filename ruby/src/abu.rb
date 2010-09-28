@@ -141,3 +141,6 @@ static class #{@context}Reducer extends Reducer<#{attrs[0]},#{attrs[1]},#{attrs[
 		:JOB_BOTTOM => '}'
 	}
 end
+
+puts 'Abu called'
+ARGV.each {|arg| p arg}
