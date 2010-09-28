@@ -1,7 +1,7 @@
 require '../src/abu.rb'
 
 Abu.generate('./out') do
-	job 'job1' do
+	job 'job3' do
 		read 'LongWritable','Text','/path/to/file.ext', 'DataReaderClassName'
 		exec 'mr1','LongWritable','Text','Text', 'IntWritable'
 		write 'Text', 'IntWritable', '/path/to/file.ext', 'DataWriterClassName'
