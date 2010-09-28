@@ -66,6 +66,10 @@ The intention at this point is to continue both java and (j)ruby development in 
 - The java version will provide the most natural syntax, and the least external dependencies and therefore will be attractive on its own
 - The jruby version will be easy to prove out, and might be the winner assuming the jruby+java compile will allow for a standalone solution of its own
 
+Gaps in Design so far:
+---------------------
+- Syntax doesnt follow DRY. Since the read statment already defines the input key-value pair, the subsequent map,reduce or mapreduce executions wouldnt need this specified again.
+
 Implementation Design
 =====================
 
@@ -80,8 +84,11 @@ Overall Algorithm:
 	b. If there's any name with a defnFound and no refFound, throw a warning that a job is unused.
 4. <<Insert logic to check if the chaining of keys and values match up here>>. We dont support includes yet.
 
-# Generate:
-1. 
+### Generate:
+TBD
+
+### Visualize
+TBD
 
 Ruby Specifics
 --------------
