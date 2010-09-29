@@ -1,5 +1,11 @@
 class Abu
-	def initialize(outdir)
+	def initialize(script_file, outdir)
+		if !File.exists? script_file
+			puts "Error: #{script} doesnt exist"
+			exit
+		else
+			@script_file=script_file
+		end
 		if File.exists? outdir and File.directory? outdir
 			@outdir=outdir
 			@out_secns = {
@@ -20,31 +26,11 @@ class Abu
 		end
 	end
 	
-	def self.generate(outdir,&block)
-		abu = Abu.new(outdir)
-		abu.parse(&block)	
-		abu.output
+	def parse()
+		@script = File.new(@script_file).read()
+		instance_eval(@script)
 	end
 
-	def parse(&block)
-		instance_eval(&block)
-	end
-	
-	def output
-		File.open(@job_output_file,'w+') do |jobout|
-			jobout.puts @out_secns[:JOB_TOP]
-			jobout.puts @out_secns[:MAPPER]
-			jobout.puts @out_secns[:REDUCER]
-			jobout.puts @out_secns[:JOB_MAIN_TOP]
-			jobout.puts @out_secns[:READER]
-			jobout.puts @out_secns[:EXEC_MAPPER]
-			jobout.puts @out_secns[:EXEC_REDUCER]
-			jobout.puts @out_secns[:WRITER]
-			jobout.puts @out_secns[:JOB_MAIN_BOTTOM]
-			jobout.puts @out_secns[:JOB_BOTTOM]
-		end		
-	end
-	
 	def job(name)
 		@context=name.capitalize
 		@job_output_file=File.join(@outdir,@context+'.java')
@@ -96,6 +82,21 @@ class Abu
 		#puts "secn= #{section}, value=#{@out_secns[section]}"
 	end
 
+	def generate
+		File.open(@job_output_file,'w+') do |jobout|
+			jobout.puts @out_secns[:JOB_TOP]
+			jobout.puts @out_secns[:MAPPER]
+			jobout.puts @out_secns[:REDUCER]
+			jobout.puts @out_secns[:JOB_MAIN_TOP]
+			jobout.puts @out_secns[:READER]
+			jobout.puts @out_secns[:EXEC_MAPPER]
+			jobout.puts @out_secns[:EXEC_REDUCER]
+			jobout.puts @out_secns[:WRITER]
+			jobout.puts @out_secns[:JOB_MAIN_BOTTOM]
+			jobout.puts @out_secns[:JOB_BOTTOM]
+		end		
+	end
+	
 	@@TEMPLATES = {
 		:JOB_TOP => 'public class #{@context} {
 /*
@@ -142,5 +143,14 @@ static class #{@context}Reducer extends Reducer<#{attrs[0]},#{attrs[1]},#{attrs[
 	}
 end
 
-puts 'Abu called'
-ARGV.each {|arg| p arg}
+puts 'Abu: The hadoop scripting language'
+puts "Usage: <abu> script.abu outdir [gen|viz]+" if ARGV.length < 2
+script = ARGV[0]
+outdir = ARGV[1]
+gen_needed = ARGV[2] if ARGV[2] 
+viz_needed = ARGV[3] if ARGV[3]
+
+abu = Abu.new script, outdir
+abu.parse
+abu.generate if gen_needed
+abu.viz if viz_needed
