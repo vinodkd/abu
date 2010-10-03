@@ -1,0 +1,3 @@
+job 'job3' do
+	read 'LongWritable','Text','/path/to/file.ext', 'DataReaderClassName'
+end
