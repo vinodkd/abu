@@ -1,6 +1,6 @@
 job 'job3' do
 	read 'LongWritable','Text','/path/to/file.ext', 'DataReaderClassName'
-	exec 'mr1','LongWritable','Text','Text', 'IntWritable'
+	execute 'mr1','LongWritable','Text','Text', 'IntWritable'
 	write 'Text', 'IntWritable', '/path/to/file.ext', 'DataWriterClassName'
 end
 

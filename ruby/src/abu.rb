@@ -1,4 +1,14 @@
 class Abu
+	# structs to hold parsed values
+	Job = Struct.new(:name, :steps)
+	Read = Struct.new(:k1,:v1,:path,:using)
+	Write = Struct.new(:k3,:v3,:path,:using)
+	Execute = Struct.new(:name,:k1,:v1,:k3,:v3)
+	
+	MapReduce = Struct.new(:name,:steps)
+	Map = Struct.new(:k1,:v1,:k2,:v2,:using)
+	Reduce = Struct.new(:k2,:v2,:k3,:v3,:using)
+
 	def initialize(script_file, outdir)
 		if !File.exists? script_file
 			puts "Error: #{script} doesnt exist"
@@ -6,144 +16,84 @@ class Abu
 		else
 			@script_file=script_file
 		end
+		
 		if File.exists? outdir and File.directory? outdir
 			@outdir=outdir
-			@out_secns = {
-				:JOB_TOP => '',
-				:MAPPER => '',
-				:REDUCER => '',
-				:JOB_MAIN_TOP => '',
-				:READER => '',
-				:EXEC_MAPPER => '',
-				:EXEC_REDUCER => '',
-				:WRITER => '',
-				:JOB_MAIN_BOTTOM => '',
-				:JOB_BOTTOM => ''
-			}
 		else
 			puts "Error: #{outdir} doesnt exist or isn't a directory"
 			exit
 		end
+		@the_job		# we'll find the name of the job when we parse it, 
+					# so this is only to show that i've yet to get rid of my java roots :(
+		@refs = Array.new	# hold all references to names in the script
+		@defs = Array.new	# hold all definitions of such names in the script
+		
 	end
 	
-	def parse()
+	def parse
 		@script = File.new(@script_file).read()
 		instance_eval(@script)
+		debug_ast
 	end
 
+	def debug_ast
+		puts "Job Steps: #{@the_job.name}"
+		@the_job.steps.each {|step| puts step}
+		puts "defs:"
+		@defs.each {|defn| puts defn}
+		puts "refs:"
+		@refs.each {|ref| puts ref}
+	end
+	
 	def job(name)
-		@context=name.capitalize
-		@job_output_file=File.join(@outdir,@context+'.java')
-		
-		appy_template_and_assign :JOB_TOP 
+		raise "Only one job per script" if @the_job
+		@the_job = Job.new(name,[])
+		@current_context=@the_job
 		if block_given?
 			yield
 		end
-		
-		appy_template_and_assign :JOB_MAIN_TOP
-		appy_template_and_assign :JOB_MAIN_BOTTOM
-		appy_template_and_assign :JOB_BOTTOM
 	end
-
+	
 	def mapreduce(name)
-		@context=name.capitalize
+		mrjob=MapReduce.new(name,[])
+		@current_context = mrjob
+		@defs << mrjob
 		if block_given?
 			yield
 		end
 	end
 
 	def read(key, value, from, using)
-		appy_template_and_assign :READER, key, value, from, using
+		raise "read can be used only inside job" if @current_context.class != Job
+		@current_context.steps << Read.new(key,value,from,using)
 	end
 
 	def map(key1, value1, key2, value2, using)
-		appy_template_and_assign :MAPPER, key2, value2, using
-		appy_template_and_assign :EXEC_MAPPER, key2, value2, using
+		@current_context.steps << Map.new(key1,value1,key2,value2,using)
 	end
 
 	def reduce(key2, listOfvalue2, key3, value3, using)
-		appy_template_and_assign :REDUCER, key3, value3, using
-		appy_template_and_assign :EXEC_REDUCER, key3, value3, using
+		@current_context.steps << Reduce.new(key2, listOfvalue2, key3, value3, using)
 	end
 
-	def exec(name,key1, value1, key3, value3)
-		# does nothing for now, the map and reduce methods handle writing out the exec statements as well.
-		# will change when a true AST is formed.
+	def execute(name,key1, value1, key3, value3)
+		raise "execute can be used only inside job" if @current_context.class != Job
+		call_to_mr = Execute.new(name, key1,value1,key3,value3)
+		@current_context.steps << call_to_mr
+		@refs << call_to_mr
 	end
 	
 	def write(key, value, to, using)
-		appy_template_and_assign :WRITER, key, value, to, using
+		raise "write can be used only inside job" if !@current_context.class == Job
+		@current_context.steps << Write.new(key,value,to,using)
 	end
 
-	def appy_template_and_assign(section,*attrs)
-		# dont like the eval, but dont like the ugly here doc either.
-		# TODO: figure out the right way to do this
-		@out_secns[section]= eval('"'+ @@TEMPLATES[section] + '"')
-		#puts "secn= #{section}, value=#{@out_secns[section]}"
+	def method_missing(name, *args, &block)
+		puts "#{name} not found"
 	end
-
-	def generate
-		File.open(@job_output_file,'w+') do |jobout|
-			jobout.puts @out_secns[:JOB_TOP]
-			jobout.puts @out_secns[:MAPPER]
-			jobout.puts @out_secns[:REDUCER]
-			jobout.puts @out_secns[:JOB_MAIN_TOP]
-			jobout.puts @out_secns[:READER]
-			jobout.puts @out_secns[:EXEC_MAPPER]
-			jobout.puts @out_secns[:EXEC_REDUCER]
-			jobout.puts @out_secns[:WRITER]
-			jobout.puts @out_secns[:JOB_MAIN_BOTTOM]
-			jobout.puts @out_secns[:JOB_BOTTOM]
-		end		
-	end
-	
-	@@TEMPLATES = {
-		:JOB_TOP => 'public class #{@context} {
-/*
-TODO imports to be added
-*/
-',
-		:MAPPER => %q|
-static class #{@context}Mapper extends Mapper<#{attrs[0]},#{attrs[1]},#{attrs[2]},#{attrs[3]}> {
-	public void map(#{attrs[0]},#{attrs[1]} value, Context context)	throws IOException, InterruptedException {
-		// your code goes here
-	}
-}
-|,
-		:REDUCER => %q|
-static class #{@context}Reducer extends Reducer<#{attrs[0]},#{attrs[1]},#{attrs[2]},#{attrs[3]}> {
-	public void reduce(#{attrs[0]} key, #{attrs[1]} value, Context context)	throws IOException, InterruptedException {
-		// your code goes here
-	}
-}
-|,
-		:JOB_MAIN_TOP => %q|
-	public static void main(String[] args) throws Exception {
-
-		// your code goes here
-		Job job = new Job();
-		job.setJarByClass(#{@context}.class);
-|,
-		:READER => %q|
-		FileInputFormat.addInputPath(job, new Path('#{attrs[2]}'));
-|,
-		:EXEC_MAPPER => '\n\t\tjob.setMapperClass(#{@context}Mapper.class);',
-		:EXEC_REDUCER => '\n\t\tjob.setReducerClass(#{@context}Reducer.class);',
-		:WRITER => %q|	
-		FileOutputFormat.setOutputPath(job, new Path('#{attrs[2]}'));
-		job.setOutputKeyClass('#{attrs[0]}'.class);
-		job.setOutputValueClass('#{attrs[1]}'.class);
-|,
-
-		:JOB_MAIN_BOTTOM => %q|
-	System.exit(job.waitForCompletion(true) ? 0 : 1);
-	}
-|,
-		:JOB_BOTTOM => '}'
-	}
 end
 
-puts 'Abu: The hadoop scripting language'
+puts 'Abu: The hadoop scripting language, generator and visualizer'
 puts "Usage: <abu> script.abu outdir [gen|viz]+" if ARGV.length < 2
 script = ARGV[0]
 outdir = ARGV[1]
@@ -154,3 +104,4 @@ abu = Abu.new script, outdir
 abu.parse
 abu.generate if gen_needed
 abu.viz if viz_needed
+
