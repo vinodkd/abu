@@ -182,7 +182,7 @@ TODO imports to be added
 ',
 		:MR_MAP => %q|
 static class #{args[0].capitalize}Mapper extends Mapper<#{args[1]},#{args[2]},#{args[3]},#{args[4]}> {
-	public void map(#{args[1]},#{args[2]} value, Context context)	throws IOException, InterruptedException {
+	public void map(#{args[1]} key,#{args[2]} value, Context context)	throws IOException, InterruptedException {
 		// your code goes here
 	}
 }
