@@ -26,23 +26,70 @@ class Abu
 		@the_job		# we'll find the name of the job when we parse it, 
 					# so this is only to show that i've yet to get rid of my java roots :(
 		@refs = Array.new	# hold all references to names in the script
-		@defs = Array.new	# hold all definitions of such names in the script
+		@defs = Hash.new	# hold all definitions of such names in the script
 		
 	end
 	
 	def parse
 		@script = File.new(@script_file).read()
 		instance_eval(@script)
-		debug_ast
+		#debug_ast
+		validate_refs
+		validate_flow
 	end
 
-	def debug_ast
-		puts "Job Steps: #{@the_job.name}"
-		@the_job.steps.each {|step| puts step}
-		puts "defs:"
-		@defs.each {|defn| puts defn}
-		puts "refs:"
-		@refs.each {|ref| puts ref}
+	def generate
+		output_file = File.join @outdir,@the_job.name.capitalize + ".java"
+		File.open(output_file,"w+") do |outfile|
+			outfile.puts apply_template(:JOB_TOP,@the_job.to_a)
+			gen_defns(outfile)
+			gen_job(outfile)
+			outfile.puts apply_template(:JOB_BOTTOM, @the_job.to_a)
+		end
+		
+	end
+
+	def gen_defns(outfile)
+		@the_job.steps.each do |step|
+			step_name = step.class.name.split('::').last
+			if ['Map','Reduce'].include? step_name
+				section = ('MR_'+ step_name.upcase).intern
+				outfile.puts apply_template(section, [@the_job.name] + step.to_a)
+			end
+		end
+		@defs.each_value do |defn|
+			defn.steps.each do |step|
+				# section name = <block name>_<step name> in caps to differntiate it from the symbols for the parse phase.
+				# this could do with some refactoring methinks.
+				section = ('MR_' + step.class.name.split('::').last.upcase).intern	
+
+				outfile.puts apply_template(section, [defn.name] + step.to_a)
+			end
+		end
+	end
+
+	def gen_job(outfile)
+		outfile.puts apply_template(:JOB_MAIN_TOP,@the_job.to_a)
+		@the_job.steps.each do |step|
+			blk= step.class.name.split('::').last
+			puts blk
+
+			# if the step is an execute step, find the defn, and insert calls to the maps & reduces defined there
+			if blk.eql? 'Execute' and (mrdef = @defs[step.name])
+				mrdef.steps.each do |mrstep|
+					mrblk = mrstep.class.name.split('::').last
+					section = ('JOB_' + mrblk.upcase).intern
+					outfile.puts apply_template(section,[mrdef.name] + mrstep.to_a)
+				end
+			else
+				section = ('JOB_' + blk.upcase).intern
+				outfile.puts apply_template(section, [@the_job.name] + step.to_a)
+			end
+		end
+		outfile.puts apply_template(:JOB_MAIN_BOTTOM, @the_job.to_a)
+	end
+
+	def visualize
 	end
 	
 	def job(name)
@@ -57,7 +104,7 @@ class Abu
 	def mapreduce(name)
 		mrjob=MapReduce.new(name,[])
 		@current_context = mrjob
-		@defs << mrjob
+		@defs[name] = mrjob
 		if block_given?
 			yield
 		end
@@ -91,6 +138,87 @@ class Abu
 	def method_missing(name, *args, &block)
 		puts "#{name} not found"
 	end
+	
+	def debug_ast
+		puts "Job Steps: #{@the_job.name}"
+		@the_job.steps.each {|step| puts step}
+		puts "defs:"
+		@defs.each {|defn| puts defn}
+		puts "refs:"
+		@refs.each {|ref| puts ref}
+	end
+	
+	def validate_refs
+		ref_names = @refs.collect {|r| r.name}
+		def_names = @defs.keys
+		
+		ref_names.each do |ref|
+			if !def_names.include? ref
+				# TODO: refine this to show a message instead of a stacktrace
+				raise "No definition found for #{ref}"
+			end
+		end
+	end
+	
+	def validate_flow
+	end
+	
+	def apply_template(section,args)
+		puts "processing #{section}.."
+		if @@TEMPLATES.has_key? section
+			template = @@TEMPLATES[section] 
+			instance_eval '"' + template + '"'
+		else
+			puts "template for #{section} not found."
+			""	# return a blank string so output doesnt contain nil
+		end
+	end
+
+	@@TEMPLATES = {
+		:JOB_TOP => 'public class #{args[0].capitalize} {
+/*
+TODO imports to be added
+*/
+',
+		:MR_MAP => %q|
+static class #{args[0].capitalize}Mapper extends Mapper<#{args[1]},#{args[2]},#{args[3]},#{args[4]}> {
+	public void map(#{args[1]},#{args[2]} value, Context context)	throws IOException, InterruptedException {
+		// your code goes here
+	}
+}
+|,
+		:MR_REDUCE => %q|
+static class #{args[0].capitalize}Reducer extends Reducer<#{args[1]},#{args[2]},#{args[3]},#{args[4]}> {
+	public void reduce(#{args[1]} key, #{args[2]} value, Context context)	throws IOException, InterruptedException {
+		// your code goes here
+	}
+}
+|,
+		:JOB_MAIN_TOP => %q|
+	public static void main(String[] args) throws Exception {
+
+		// your code goes here
+		Job job = new Job();
+		job.setJarByClass(#{args[0].capitalize}.class);
+|,
+		:JOB_READ => %q|
+		FileInputFormat.addInputPath(job, new Path('#{args[3]}'));
+|,
+		:JOB_MAP => '\n\t\tjob.setMapperClass(#{args[0].capitalize}Mapper.class);',
+		:JOB_REDUCE => '\n\t\tjob.setReducerClass(#{args[0].capitalize}Reducer.class);',
+		:JOB_WRITE => %q|	
+		FileOutputFormat.setOutputPath(job, new Path('#{args[3]}'));
+		job.setOutputKeyClass(#{args[1]}.class);
+		job.setOutputValueClass(#{args[2]}.class);
+|,
+
+		:JOB_MAIN_BOTTOM => %q|
+		System.exit(job.waitForCompletion(true) ? 0 : 1);
+	}
+|,
+		:JOB_BOTTOM => '}'
+	}
+
 end
 
 puts 'Abu: The hadoop scripting language, generator and visualizer'
