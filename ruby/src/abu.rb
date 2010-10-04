@@ -38,60 +38,6 @@ class Abu
 		validate_flow
 	end
 
-	def generate
-		output_file = File.join @outdir,@the_job.name.capitalize + ".java"
-		File.open(output_file,"w+") do |outfile|
-			outfile.puts apply_template(:JOB_TOP,@the_job.to_a)
-			gen_defns(outfile)
-			gen_job(outfile)
-			outfile.puts apply_template(:JOB_BOTTOM, @the_job.to_a)
-		end
-		
-	end
-
-	def gen_defns(outfile)
-		@the_job.steps.each do |step|
-			step_name = step.class.name.split('::').last
-			if ['Map','Reduce'].include? step_name
-				section = ('MR_'+ step_name.upcase).intern
-				outfile.puts apply_template(section, [@the_job.name] + step.to_a)
-			end
-		end
-		@defs.each_value do |defn|
-			defn.steps.each do |step|
-				# section name = <block name>_<step name> in caps to differntiate it from the symbols for the parse phase.
-				# this could do with some refactoring methinks.
-				section = ('MR_' + step.class.name.split('::').last.upcase).intern	
-
-				outfile.puts apply_template(section, [defn.name] + step.to_a)
-			end
-		end
-	end
-
-	def gen_job(outfile)
-		outfile.puts apply_template(:JOB_MAIN_TOP,@the_job.to_a)
-		@the_job.steps.each do |step|
-			blk= step.class.name.split('::').last
-			puts blk
-
-			# if the step is an execute step, find the defn, and insert calls to the maps & reduces defined there
-			if blk.eql? 'Execute' and (mrdef = @defs[step.name])
-				mrdef.steps.each do |mrstep|
-					mrblk = mrstep.class.name.split('::').last
-					section = ('JOB_' + mrblk.upcase).intern
-					outfile.puts apply_template(section,[mrdef.name] + mrstep.to_a)
-				end
-			else
-				section = ('JOB_' + blk.upcase).intern
-				outfile.puts apply_template(section, [@the_job.name] + step.to_a)
-			end
-		end
-		outfile.puts apply_template(:JOB_MAIN_BOTTOM, @the_job.to_a)
-	end
-
-	def visualize
-	end
-	
 	def job(name)
 		raise "Only one job per script" if @the_job
 		@the_job = Job.new(name,[])
@@ -163,6 +109,57 @@ class Abu
 	def validate_flow
 	end
 	
+	def generate
+		output_file = File.join @outdir,@the_job.name.capitalize + ".java"
+		File.open(output_file,"w+") do |outfile|
+			outfile.puts apply_template(:JOB_TOP,@the_job.to_a)
+			gen_defns(outfile)
+			gen_job(outfile)
+			outfile.puts apply_template(:JOB_BOTTOM, @the_job.to_a)
+		end
+		
+	end
+
+	def gen_defns(outfile)
+		@the_job.steps.each do |step|
+			step_name = step.class.name.split('::').last
+			if ['Map','Reduce'].include? step_name
+				section = ('MR_'+ step_name.upcase).intern
+				outfile.puts apply_template(section, [@the_job.name] + step.to_a)
+			end
+		end
+		@defs.each_value do |defn|
+			defn.steps.each do |step|
+				# section name = <block name>_<step name> in caps to differntiate it from the symbols for the parse phase.
+				# this could do with some refactoring methinks.
+				section = ('MR_' + step.class.name.split('::').last.upcase).intern	
+
+				outfile.puts apply_template(section, [defn.name] + step.to_a)
+			end
+		end
+	end
+
+	def gen_job(outfile)
+		outfile.puts apply_template(:JOB_MAIN_TOP,@the_job.to_a)
+		@the_job.steps.each do |step|
+			blk= step.class.name.split('::').last
+			puts blk
+
+			# if the step is an execute step, find the defn, and insert calls to the maps & reduces defined there
+			if blk.eql? 'Execute' and (mrdef = @defs[step.name])
+				mrdef.steps.each do |mrstep|
+					mrblk = mrstep.class.name.split('::').last
+					section = ('JOB_' + mrblk.upcase).intern
+					outfile.puts apply_template(section,[mrdef.name] + mrstep.to_a)
+				end
+			else
+				section = ('JOB_' + blk.upcase).intern
+				outfile.puts apply_template(section, [@the_job.name] + step.to_a)
+			end
+		end
+		outfile.puts apply_template(:JOB_MAIN_BOTTOM, @the_job.to_a)
+	end
+
 	def apply_template(section,args)
 		puts "processing #{section}.."
 		if @@TEMPLATES.has_key? section
@@ -172,6 +169,9 @@ class Abu
 			puts "template for #{section} not found."
 			""	# return a blank string so output doesnt contain nil
 		end
+	end
+
+	def visualize
 	end
 
 	@@TEMPLATES = {
