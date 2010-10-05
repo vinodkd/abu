@@ -8,6 +8,9 @@ class Abu
 	MapReduce = Struct.new(:name,:steps)
 	Map = Struct.new(:k1,:v1,:k2,:v2,:using)
 	Reduce = Struct.new(:k2,:v2,:k3,:v3,:using)
+	@@KNOWN_IMPORTS = {
+		#TODO: put imports for known types here. Right now the kludge is to import all of hadoop.io.
+	}
 
 	def initialize(script_file, outdir)
 		if !File.exists? script_file
@@ -27,7 +30,7 @@ class Abu
 					# so this is only to show that i've yet to get rid of my java roots :(
 		@refs = Array.new	# hold all references to names in the script
 		@defs = Hash.new	# hold all definitions of such names in the script
-		
+		# @import_reqd = Set.new	# hold all names that will need imports
 	end
 	
 	def parse
@@ -112,6 +115,7 @@ class Abu
 	def generate
 		output_file = File.join @outdir,@the_job.name.capitalize + ".java"
 		File.open(output_file,"w+") do |outfile|
+			outfile.puts apply_template(:JOB_IMPORTS,[])
 			outfile.puts apply_template(:JOB_TOP,@the_job.to_a)
 			gen_defns(outfile)
 			gen_job(outfile)
@@ -175,10 +179,20 @@ class Abu
 	end
 
 	@@TEMPLATES = {
+		:JOB_IMPORTS => %q|
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.*;		// kludge; should be fixed in future with imports to types used in script.
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+import java.io.IOException;
+
+|,
 		:JOB_TOP => 'public class #{args[0].capitalize} {
-/*
-TODO imports to be added
-*/
 ',
 		:MR_MAP => %q|
 static class #{args[0].capitalize}Mapper extends Mapper<#{args[1]},#{args[2]},#{args[3]},#{args[4]}> {
@@ -189,7 +203,7 @@ static class #{args[0].capitalize}Mapper extends Mapper<#{args[1]},#{args[2]},#{
 |,
 		:MR_REDUCE => %q|
 static class #{args[0].capitalize}Reducer extends Reducer<#{args[1]},#{args[2]},#{args[3]},#{args[4]}> {
-	public void reduce(#{args[1]} key, #{args[2]} value, Context context)	throws IOException, InterruptedException {
+	public void reduce(#{args[1]} key, Iterable<#{args[2]}> values, Context context)	throws IOException, InterruptedException {
 		// your code goes here
 	}
 }
@@ -202,12 +216,12 @@ static class #{args[0].capitalize}Reducer extends Reducer<#{args[1]},#{args[2]},
 		job.setJarByClass(#{args[0].capitalize}.class);
 |,
 		:JOB_READ => %q|
-		FileInputFormat.addInputPath(job, new Path('#{args[3]}'));
+		FileInputFormat.addInputPath(job, new Path(\"#{args[3]}\"));
 |,
 		:JOB_MAP => '\n\t\tjob.setMapperClass(#{args[0].capitalize}Mapper.class);',
 		:JOB_REDUCE => '\n\t\tjob.setReducerClass(#{args[0].capitalize}Reducer.class);',
 		:JOB_WRITE => %q|	
-		FileOutputFormat.setOutputPath(job, new Path('#{args[3]}'));
+		FileOutputFormat.setOutputPath(job, new Path(\"#{args[3]}\"));
 		job.setOutputKeyClass(#{args[1]}.class);
 		job.setOutputValueClass(#{args[2]}.class);
 |,
