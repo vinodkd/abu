@@ -2,3 +2,5 @@
 *.class
 # Ignore textpad workspace files.
 *.tws
+# Ignore the chug presentation
+*.pptx
