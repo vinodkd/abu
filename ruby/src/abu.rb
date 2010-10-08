@@ -8,6 +8,7 @@ class Abu
     MapReduce = Struct.new(:name,:steps)
     Map = Struct.new(:k1,:v1,:k2,:v2,:using)
     Reduce = Struct.new(:k2,:v2,:k3,:v3,:using)
+    
     @@KNOWN_IMPORTS = {
         #TODO: put imports for known types here. Right now the kludge is to import all of hadoop.io.
     }
@@ -27,7 +28,7 @@ class Abu
             exit
         end
         @the_job        # we'll find the name of the job when we parse it, 
-                    # so this is only to show that i've yet to get rid of my java roots :(
+                        # so this is only to show that i've yet to get rid of my java roots :(
         @refs = Array.new   # hold all references to names in the script
         @defs = Hash.new    # hold all definitions of such names in the script
         # @import_reqd = Set.new    # hold all names that will need imports
@@ -176,6 +177,7 @@ class Abu
     end
 
     def visualize
+        puts "visualize called"
     end
 
     @@TEMPLATES = {
@@ -239,11 +241,18 @@ puts 'Abu: The hadoop scripting language, generator and visualizer'
 puts "Usage: <abu> script.abu outdir [gen|viz]+" if ARGV.length < 2
 script = ARGV[0]
 outdir = ARGV[1]
-gen_needed = ARGV[2] if ARGV[2] 
-viz_needed = ARGV[3] if ARGV[3]
+if ARGV[2] 
+    gen_needed = ARGV[2].downcase.eql? 'gen'
+    viz_needed = ARGV[2].downcase.eql? 'viz'
+end
+if ARGV[3] 
+    gen_needed = ARGV[3].downcase.eql? 'gen'
+    viz_needed = ARGV[3].downcase.eql? 'viz'
+end
+
 
 abu = Abu.new script, outdir
 abu.parse
 abu.generate if gen_needed
-abu.viz if viz_needed
+abu.visualize if viz_needed
 
