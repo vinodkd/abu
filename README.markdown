@@ -31,11 +31,26 @@ In a bash environment, run the following after downloading Abu:
 
 Codebase Guide
 ==============
-doc		- Core idea and design documents
-java		- contains the source to the java parser for Abu. Very early stage
-ruby		- contains the source to the ruby version of Abu.
-  - test	- contains some test scripts in the ruby syntax.
-viz		- contains trial runs of creating map reduce diagrams at varying detail manually. Will be used as templates for the viz generator.
+<table>
+  <tr>
+    <th>Directory</th><th align="left">Description</th>
+  </tr>
+  <tr>
+    <td>doc</td><td> Core idea and design documents</td>
+  </tr>
+  <tr>
+    <td>java</td><td> contains the source to the java parser for Abu. Very early stage</td>
+  </tr>
+  <tr>
+    <td>ruby</td><td> contains the source to the ruby version of Abu.</td>
+  </tr>
+  <tr>
+    <td>  - test</td><td> contains some test scripts in the ruby syntax.</td>
+  </tr>
+  <tr>
+    <td>viz</td><td> contains trial runs of creating map reduce diagrams at varying detail manually. Will be used as templates for the viz generator.</td>
+  </tr>
+  </table>
 
 About the name
 ==============
