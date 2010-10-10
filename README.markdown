@@ -1,6 +1,6 @@
 Abu: A scripting language for Hadoop
 =====================================
-<img src="http://github.com/vinodkd/abu/blob/master/doc/abu.jpg" align="left" width="250" height="250"/> Abu is a language that helps in writing Hadoop map reduce jobs by extracting out the essence of the map reduce logic into a DSL.
+<img src="http://github.com/vinodkd/abu/raw/master/doc/abu.jpg" align="left" width="250" height="250"/> Abu is a language that helps in writing Hadoop map reduce jobs by extracting out the essence of the map reduce logic into a DSL.
 Scripts written in the abu DSL can then be:
 - "compiled" into standard java boilerplate to be run on hadoop (sans the actual method implementations)
 - visualized using Graphviz
