@@ -177,9 +177,36 @@ class Abu
     end
 
     def visualize
-        puts "visualize called"
+        output_file = File.join @outdir,@the_job.name.capitalize + ".gv"
+        File.open(output_file,"w+") do |outfile|
+            outfile.puts apply_template(:VIZ_JOB_TOP,[])
+            viz_job outfile
+            viz_defns outfile
+            outfile.puts apply_template(:VIZ_JOB_BOTTOM, @the_job.to_a)
+        end
+        
     end
 
+    def viz_job(outfile)
+        viz_block @the_job, outfile
+    end
+    
+    def viz_defns(outfile)
+        @defs.each_value do |defn|
+            puts "Processing #{defn.name}.."
+            viz_block defn, outfile
+        end
+    end
+
+    def viz_block(block, outfile)
+        block.steps.each do |step|
+            # section name = <block name>_<step name> in caps to differntiate it from the symbols for the parse phase.
+            # this could do with some refactoring methinks.
+            section = ('VIZ_' + step.class.name.split('::').last.upcase).intern  
+            outfile.puts apply_template(section, [block.name] + step.to_a)
+        end
+    end
+    
     @@TEMPLATES = {
         :JOB_IMPORTS => %q|
 import org.apache.hadoop.conf.Configuration;
@@ -232,7 +259,27 @@ static class #{args[0].capitalize}Reducer extends Reducer<#{args[1]},#{args[2]},
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 |,
-        :JOB_BOTTOM => '}'
+        :JOB_BOTTOM => '}',
+        :VIZ_JOB_TOP => %q|digraph G{
+    node[shape=box]
+|,
+        :VIZ_JOB_BOTTOM => %q|
+    label=\"#{args[0].capitalize}\"
+}
+|,
+        # requires jobname before the read values
+        # obvious limitations with heredoc seen here. Too many characters to escape rendering template unreadable. Redesign required.
+        
+        :VIZ_READ => %q|
+    subgraph read#{args[0]}SG{
+        rank=same
+        input[shape=Mrecord]
+        DataReaderClassName [shape=component, label=\"\{#{args[3]}\|\{#{args[1]}\|#{args[2]}\}\}\"]
+
+        input -> DataReaderClassName [label=\"using\"]
+    }
+
+|
     }
 
 end
