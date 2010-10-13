@@ -268,18 +268,40 @@ static class #{args[0].capitalize}Reducer extends Reducer<#{args[1]},#{args[2]},
 }
 |,
         # requires jobname before the read values
-        # obvious limitations with heredoc seen here. Too many characters to escape rendering template unreadable. Redesign required.
-        
-        :VIZ_READ => %q|
+        # had to change the heredoc sigil to / from | as its used in the dot format.
+        :VIZ_READ => %q/
     subgraph read#{args[0]}SG{
         rank=same
-        input[shape=Mrecord]
-        DataReaderClassName [shape=component, label=\"\{#{args[3]}\|\{#{args[1]}\|#{args[2]}\}\}\"]
-
-        input -> DataReaderClassName [label=\"using\"]
+        #{args[0]}input[shape=Mrecord, label=\"{#{args[3]}|{#{args[1]}|#{args[2]}}}\"]
+        #{
+        if args[4]!=''
+            'DataReaderClassName [shape=component]'
+            'args[4]input -> DataReaderClassName [label=\"using\"]'
+        end}
     }
+/,
+        :VIZ_WRITE => %q/
+    subgraph write#{args[0]}SG{
+        rank=same
+        #{args[0]}output[shape=Mrecord, label=\"{#{args[3]}|{#{args[1]}|#{args[2]}}}\"]
+        DataWriterClassName [shape=component]
 
-|
+        #{args[0]}output -> DataWriterClassName [label=\"using\"]
+    }
+/,
+        :VIZ_MAP => %q/
+    subgraph cluster#{args[0]}mapSG{
+        #{args[0]}input [shape=Mrecord label=\"#{args[1]}|#{args[2]}\"]
+        #{args[0]}map [label=\"map\", shape=plaintext]
+        #{args[0]}output [shape=Mrecord label=\"<outp> #{args[3]}|#{args[4]}\"]
+        mapClassName[shape=component]
+        {rank=same;#{args[0]}map;mapClassName}
+
+        #{args[0]}input -> #{args[0]}map [style=invis] 
+        #{args[0]}map -> #{args[0]}output[style=invis]
+        #{args[0]}map -> mapClassName
+    }
+/
     }
 
 end
