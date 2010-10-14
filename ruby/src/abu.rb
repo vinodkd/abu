@@ -180,8 +180,8 @@ class Abu
         output_file = File.join @outdir,@the_job.name.capitalize + ".gv"
         File.open(output_file,"w+") do |outfile|
             outfile.puts apply_template(:VIZ_JOB_TOP,[])
-            viz_job outfile
             viz_defns outfile
+            viz_job outfile
             outfile.puts apply_template(:VIZ_JOB_BOTTOM, @the_job.to_a)
         end
         print "Generating png..."
@@ -201,19 +201,25 @@ class Abu
     end
 
     def viz_block(block, outfile)
-        oldstep = nil
+        oldstep=nil
+        outfile.puts apply_template(:VIZ_BLOCK_TOP, [block.name])
         block.steps.each do |step|
             # section name = <block name>_<step name> in caps to differntiate it from the symbols for the parse phase.
             # this could do with some refactoring methinks.
             step_name = step.class.name.split('::').last
+            #puts step_name, (step.class),(step.class != Execute)
             section = ('VIZ_' + step_name.upcase).intern  
             outfile.puts apply_template(section, [block.name] + step.to_a)
             if oldstep
-                outfile.puts apply_template :VIZ_LINK, [block.name, oldstep.class.name.split('::').last.downcase,step_name.downcase]
-            else
-                oldstep = step
+                oldstep_name = oldstep.class.name.split('::').last
+                args = [block.name, oldstep_name.downcase,step_name.downcase]
+                args += ['output','input'] if step.class == Map or step.class == Reduce
+                puts args
+                outfile.puts apply_template(:VIZ_LINK, args)
             end
+            oldstep = step
         end
+        outfile.puts apply_template(:VIZ_BLOCK_BOTTOM, [block.name, block.class.name.split('::').last])
     end
     
     @@TEMPLATES = {
@@ -274,9 +280,21 @@ static class #{args[0].capitalize}Reducer extends Reducer<#{args[1]},#{args[2]},
     node[shape=box]
 |,
         :VIZ_JOB_BOTTOM => %q|
-    label=\"#{args[0].capitalize}\"
+    label=\"Script:#{args[0].capitalize}\"
+    labelloc=t
 }
 |,
+        :VIZ_BLOCK_TOP => %q/
+        subgraph cluster_#{args[0]}_SG{
+            #{args[0]}_anchor [style=invis shape=point]
+ /,
+        :VIZ_BLOCK_BOTTOM => %q/
+        
+            labelloc=t
+            label=\"#{args[1]} : #{args[0]}\"
+        }
+        
+ /,
         # requires jobname before the read values
         # had to change the heredoc sigil to / from | as its used in the dot format.
         :VIZ_READ => %q/
@@ -290,13 +308,25 @@ static class #{args[0].capitalize}Reducer extends Reducer<#{args[1]},#{args[2]},
         end}
     }
 /,
+        :VIZ_EXECUTE => %q/
+    subgraph #{args[0]}_execute_SG{
+        rank=same
+        #{args[0]}_execute [label=\"Execute #{args[1]}\"]
+        #{args[0]}_execute_anchor [style=invis shape=point]
+        
+        #{args[0]}_execute_anchor -> #{args[1]}_anchor[lhead=cluster_#{args[1]}_SG]
+    }
+        
+/,
         :VIZ_WRITE => %q/
     subgraph #{args[0]}_write_SG{
         rank=same
-        #{args[0]}_write[shape=Mrecord, label=\"{#{args[3]}|{#{args[1]}|#{args[2]}}}\"]
-        DataWriterClassName [shape=component]
-
-        #{args[0]}_write -> DataWriterClassName [label=\"using\"]
+        #{args[0]}_write[shape=Mrecord, label=\"{{#{args[1]}|#{args[2]}}|#{args[3]}}\"]
+        #{
+        if args[4]!=''
+            'DataWriterClassName [shape=component]'
+            '#{args[0]}_write -> DataWriterClassName [label=\"using\"]'
+        end}
     }
 /,
         :VIZ_MAP => %q/
@@ -325,9 +355,9 @@ static class #{args[0].capitalize}Reducer extends Reducer<#{args[1]},#{args[2]},
         #{args[0]}_reduce -> reduceClassName
     }
 /,
-        # inputs required: job name, prev step name, curr step name
+        # inputs required: job name, prev step name, curr step name, tail suffix, head suffix
         :VIZ_LINK => %q/
-        #{args[0]}_#{args[1]} -> #{args[0]}_#{args[2]}[lhead=cluster_#{args[0]}_#{args[1]}_SG] 
+        #{args[0]}_#{args[1]}#{args[3] if args[3]} -> #{args[0]}_#{args[2]}#{args[4] if args[4]}[lhead=#{(['read','write','execute'].include?args[2])?'':'cluster_'}#{args[0]}_#{args[2]}_SG] 
 
 /
     }
