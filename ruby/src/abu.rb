@@ -184,7 +184,9 @@ class Abu
             viz_defns outfile
             outfile.puts apply_template(:VIZ_JOB_BOTTOM, @the_job.to_a)
         end
-        
+        print "Generating png..."
+        dot_done = `dot -Tpng -o#{output_file}.png #{output_file}`
+        print "done"
     end
 
     def viz_job(outfile)
@@ -199,11 +201,18 @@ class Abu
     end
 
     def viz_block(block, outfile)
+        oldstep = nil
         block.steps.each do |step|
             # section name = <block name>_<step name> in caps to differntiate it from the symbols for the parse phase.
             # this could do with some refactoring methinks.
-            section = ('VIZ_' + step.class.name.split('::').last.upcase).intern  
+            step_name = step.class.name.split('::').last
+            section = ('VIZ_' + step_name.upcase).intern  
             outfile.puts apply_template(section, [block.name] + step.to_a)
+            if oldstep
+                outfile.puts apply_template :VIZ_LINK, [block.name, oldstep.class.name.split('::').last.downcase,step_name.downcase]
+            else
+                oldstep = step
+            end
         end
     end
     
@@ -260,6 +269,7 @@ static class #{args[0].capitalize}Reducer extends Reducer<#{args[1]},#{args[2]},
     }
 |,
         :JOB_BOTTOM => '}',
+
         :VIZ_JOB_TOP => %q|digraph G{
     node[shape=box]
 |,
@@ -270,37 +280,55 @@ static class #{args[0].capitalize}Reducer extends Reducer<#{args[1]},#{args[2]},
         # requires jobname before the read values
         # had to change the heredoc sigil to / from | as its used in the dot format.
         :VIZ_READ => %q/
-    subgraph read#{args[0]}SG{
+    subgraph #{args[0]}_read_SG{
         rank=same
-        #{args[0]}input[shape=Mrecord, label=\"{#{args[3]}|{#{args[1]}|#{args[2]}}}\"]
+        #{args[0]}_read[shape=Mrecord, label=\"{#{args[3]}|{#{args[1]}|#{args[2]}}}\"]
         #{
         if args[4]!=''
             'DataReaderClassName [shape=component]'
-            'args[4]input -> DataReaderClassName [label=\"using\"]'
+            'args[0]_read -> DataReaderClassName [label=\"using\"]'
         end}
     }
 /,
         :VIZ_WRITE => %q/
-    subgraph write#{args[0]}SG{
+    subgraph #{args[0]}_write_SG{
         rank=same
-        #{args[0]}output[shape=Mrecord, label=\"{#{args[3]}|{#{args[1]}|#{args[2]}}}\"]
+        #{args[0]}_write[shape=Mrecord, label=\"{#{args[3]}|{#{args[1]}|#{args[2]}}}\"]
         DataWriterClassName [shape=component]
 
-        #{args[0]}output -> DataWriterClassName [label=\"using\"]
+        #{args[0]}_write -> DataWriterClassName [label=\"using\"]
     }
 /,
         :VIZ_MAP => %q/
-    subgraph cluster#{args[0]}mapSG{
-        #{args[0]}input [shape=Mrecord label=\"#{args[1]}|#{args[2]}\"]
-        #{args[0]}map [label=\"map\", shape=plaintext]
-        #{args[0]}output [shape=Mrecord label=\"<outp> #{args[3]}|#{args[4]}\"]
+    subgraph cluster_#{args[0]}_map_SG{
+        #{args[0]}_mapinput [shape=Mrecord label=\"#{args[1]}|#{args[2]}\"]
+        #{args[0]}_map [label=\"map\", shape=plaintext]
+        #{args[0]}_mapoutput [shape=Mrecord label=\"<outp> #{args[3]}|#{args[4]}\"]
         mapClassName[shape=component]
-        {rank=same;#{args[0]}map;mapClassName}
+        {rank=same;#{args[0]}_map;mapClassName}
 
-        #{args[0]}input -> #{args[0]}map [style=invis] 
-        #{args[0]}map -> #{args[0]}output[style=invis]
-        #{args[0]}map -> mapClassName
+        #{args[0]}_mapinput -> #{args[0]}_map [style=invis] 
+        #{args[0]}_map -> #{args[0]}_mapoutput[style=invis]
+        #{args[0]}_map -> mapClassName
     }
+/,
+        :VIZ_REDUCE => %q/
+    subgraph cluster_#{args[0]}_reduce_SG{
+        #{args[0]}_reduceinput [shape=Mrecord label=\"#{args[1]}|#{args[2]}\"]
+        #{args[0]}_reduce [label=\"reduce\", shape=plaintext]
+        #{args[0]}_reduceoutput [shape=Mrecord label=\"<outp> #{args[3]}|#{args[4]}\"]
+        reduceClassName[shape=component]
+        {rank=same;#{args[0]}_reduce;reduceClassName}
+
+        #{args[0]}_reduceinput -> #{args[0]}_reduce [style=invis] 
+        #{args[0]}_reduce -> #{args[0]}_reduceoutput[style=invis]
+        #{args[0]}_reduce -> reduceClassName
+    }
+/,
+        # inputs required: job name, prev step name, curr step name
+        :VIZ_LINK => %q/
+        #{args[0]}_#{args[1]} -> #{args[0]}_#{args[2]}[lhead=cluster_#{args[0]}_#{args[1]}_SG] 
+
 /
     }
 
