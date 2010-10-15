@@ -1,0 +1,18 @@
+digraph G{
+    node[shape=box]
+
+    subgraph read{
+	job1_read
+    }
+    subgraph execute{
+	job1_execute
+    }
+    subgraph write{
+	job1_write
+    }
+    
+    job1_read -> job1_execute[lhead=execute]
+    job1_execute -> job1_write[lhead=write]
+
+    label = "Job1"
+}
