@@ -293,7 +293,7 @@ static class #{args[0].capitalize}Reducer extends Reducer<#{args[1]},#{args[2]},
 
         :VIZ_JOB_TOP => %q|digraph G{
     node[shape=box style=rounded]
-    compound=true
+    //compound=true
     rankdir=TB
     outputMode=nodesfirst
 |,
@@ -321,8 +321,8 @@ static class #{args[0].capitalize}Reducer extends Reducer<#{args[1]},#{args[2]},
             #{args[0]}_read[shape=Mrecord, label=\"{#{args[3]}|{#{args[1]}|#{args[2]}}}\"]
         #{
         if args[4]!=''
-            '#{args[0]}_DataReaderClassName [shape=component]'
-            'args[0]_read -> #{args[0]}_DataReaderClassName [label=\"using\"]'
+            args[0] + '_' +args[4] + ' [shape=component]'
+            args[0] + '_read -> ' + args[0] + '_' + args[4] + '[label=\"using\"]'
         end}
         }
 /,
@@ -342,8 +342,8 @@ static class #{args[0].capitalize}Reducer extends Reducer<#{args[1]},#{args[2]},
             #{args[0]}_write[shape=Mrecord, label=\"{{#{args[1]}|#{args[2]}}|#{args[3]}}\"]
         #{
         if args[4]!=''
-            '#{args[0]}_DataWriterClassName [shape=component]'
-            '#{args[0]}_write -> #{args[0]}_DataWriterClassName [label=\"using\"]'
+            args[0] + '_' + args[4] + '[shape=component]'
+            args[0] + '_write -> '+ args[0] + '_' + args[4] + '[label=\"using\"]'
         end}
         }
 /,
@@ -352,12 +352,14 @@ static class #{args[0].capitalize}Reducer extends Reducer<#{args[1]},#{args[2]},
             #{args[0]}_map_input [shape=Mrecord label=\"#{args[1]}|#{args[2]}\"]
             #{args[0]}_map [label=\"map   \", shape=plaintext]
             #{args[0]}_map_output [shape=Mrecord label=\"<outp> #{args[3]}|#{args[4]}\"]
-            #{args[0]}_map_ClassName[shape=component]
-            {rank=same;#{args[0]}_map;#{args[0]}_map_ClassName}
+            #{if args[5]!=''
+            args[5] + ' [shape=component]'
+            '{rank=same;' + args[0] +'_map;' + args[5]+ '}'
+            end}
 
             #{args[0]}_map_input -> #{args[0]}_map [style=invis] 
             #{args[0]}_map -> #{args[0]}_map_output[style=invis]
-            #{args[0]}_map -> #{args[0]}_map_ClassName
+            #{args[0] + '_map -> ' + args[5] if args[5]!=''}
         }
 /,
         :VIZ_REDUCE => %q/
@@ -365,12 +367,14 @@ static class #{args[0].capitalize}Reducer extends Reducer<#{args[1]},#{args[2]},
             #{args[0]}_reduce_input [shape=Mrecord label=\"#{args[1]}|#{args[2]}\"]
             #{args[0]}_reduce [label=\"reduce\", shape=plaintext]
             #{args[0]}_reduce_output [shape=Mrecord label=\"<outp> #{args[3]}|#{args[4]}\"]
-            #{args[0]}_reduce_ClassName[shape=component]
-            {rank=same;#{args[0]}_reduce;#{args[0]}_reduce_ClassName}
+            #{if args[5]!=''
+            args[5] + ' [shape=component]'
+            '{rank=same;' + args[0] + '_reduce;' + args[5] + '}'
+            end}
 
             #{args[0]}_reduce_input -> #{args[0]}_reduce [style=invis] 
             #{args[0]}_reduce -> #{args[0]}_reduce_output[style=invis]
-            #{args[0]}_reduce -> #{args[0]}_reduce_ClassName
+            #{args[0] + '_reduce -> ' + args[5]  if args[5]!=''}
         }
 /,
         :VIZ_LINK => %q/

@@ -6,8 +6,8 @@ job 'MaxTemperature2' do
 end
 
 mapreduce 'max_temp' do
-    map 'LongWritable','Text','Text', 'IntWritable', ''
-    reduce 'Text', 'IntWritable','Text', 'IntWritable', ''
+    map 'LongWritable','Text','Text', 'IntWritable', 'mapClass'
+    reduce 'Text', 'IntWritable','Text', 'IntWritable', 'reduceClass'
 end
 
 mapreduce 'max_temp2' do
