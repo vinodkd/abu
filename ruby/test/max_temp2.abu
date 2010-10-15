@@ -1,0 +1,16 @@
+job 'MaxTemperature2' do
+    read 'LongWritable','Text','/path/to/file.ext', ''
+    execute 'max_temp','LongWritable','Text','Text', 'IntWritable'
+    execute 'max_temp2','LongWritable','Text','Text', 'IntWritable'
+    write 'Text', 'IntWritable', '/path/to/file.ext', ''
+end
+
+mapreduce 'max_temp' do
+    map 'LongWritable','Text','Text', 'IntWritable', ''
+    reduce 'Text', 'IntWritable','Text', 'IntWritable', ''
+end
+
+mapreduce 'max_temp2' do
+    map 'LongWritable','Text','Text', 'IntWritable', ''
+    reduce 'Text', 'IntWritable','Text', 'IntWritable', ''
+end
