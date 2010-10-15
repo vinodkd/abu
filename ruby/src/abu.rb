@@ -148,7 +148,7 @@ class Abu
         outfile.puts apply_template(:JOB_MAIN_TOP,@the_job.to_a)
         @the_job.steps.each do |step|
             blk= step.class.name.split('::').last
-            puts blk
+            #puts blk
 
             # if the step is an execute step, find the defn, and insert calls to the maps & reduces defined there
             if blk.eql? 'Execute' and (mrdef = @defs[step.name])
@@ -206,22 +206,37 @@ class Abu
         block.steps.each do |step|
             # section name = <block name>_<step name> in caps to differntiate it from the symbols for the parse phase.
             # this could do with some refactoring methinks.
-            step_name = step.class.name.split('::').last
-            #puts step_name, (step.class),(step.class != Execute)
-            section = ('VIZ_' + step_name.upcase).intern  
+            #puts 'viz_block:',step, oldstep
+            step_type = step.class.name.split('::').last
+            section = ('VIZ_' + step_type.upcase).intern  
             outfile.puts apply_template(section, [block.name] + step.to_a)
             if oldstep
-                oldstep_name = oldstep.class.name.split('::').last
-                args = [block.name, oldstep_name.downcase,step_name.downcase]
-                args += ['output','input'] if step.class == Map or step.class == Reduce
-                puts args
-                outfile.puts apply_template(:VIZ_LINK, args)
+                viz_link block, oldstep, step, outfile
             end
             oldstep = step
         end
         outfile.puts apply_template(:VIZ_BLOCK_BOTTOM, [block.name, block.class.name.split('::').last])
     end
     
+    def viz_link(block, oldstep, step,outfile)
+        tail = get_tail block,oldstep
+        head = get_head block,step
+        subgraph = get_subgraph block,step
+        outfile.puts apply_template(:VIZ_LINK, [tail,head,subgraph])
+    end
+    
+    def get_tail(block,step)
+        apply_template ('VIZ_'+ step.class.name.split('::').last.upcase+'_TAIL').intern,[block.name] + step.to_a
+    end
+       
+    def get_head(block,step)
+        apply_template ('VIZ_'+ step.class.name.split('::').last.upcase+'_HEAD').intern,[block.name] + step.to_a
+    end
+    
+    def get_subgraph(block,step)
+        apply_template ('VIZ_'+ step.class.name.split('::').last.upcase+'_SUBGRAPH').intern,[block.name] + step.to_a
+    end
+
     @@TEMPLATES = {
         :JOB_IMPORTS => %q|
 import org.apache.hadoop.conf.Configuration;
@@ -277,7 +292,10 @@ static class #{args[0].capitalize}Reducer extends Reducer<#{args[1]},#{args[2]},
         :JOB_BOTTOM => '}',
 
         :VIZ_JOB_TOP => %q|digraph G{
-    node[shape=box]
+    node[shape=box style=rounded]
+    compound=true
+    rankdir=TB
+    outputMode=nodesfirst
 |,
         :VIZ_JOB_BOTTOM => %q|
     label=\"Script:#{args[0].capitalize}\"
@@ -285,81 +303,102 @@ static class #{args[0].capitalize}Reducer extends Reducer<#{args[1]},#{args[2]},
 }
 |,
         :VIZ_BLOCK_TOP => %q/
-        subgraph cluster_#{args[0]}_SG{
-            #{args[0]}_anchor [style=invis shape=point]
- /,
+    subgraph cluster_#{args[0]}_SG{
+        #{args[0]}_anchor [style=invis shape=point]
+        headport=e/,
+ 
         :VIZ_BLOCK_BOTTOM => %q/
-        
-            labelloc=t
-            label=\"#{args[1]} : #{args[0]}\"
-        }
+        labelloc=t
+        label=\"#{args[1]} : #{args[0]}\"
+    }
         
  /,
         # requires jobname before the read values
         # had to change the heredoc sigil to / from | as its used in the dot format.
         :VIZ_READ => %q/
-    subgraph #{args[0]}_read_SG{
-        rank=same
-        #{args[0]}_read[shape=Mrecord, label=\"{#{args[3]}|{#{args[1]}|#{args[2]}}}\"]
+        subgraph #{args[0]}_read_SG{
+            rank=same
+            #{args[0]}_read[shape=Mrecord, label=\"{#{args[3]}|{#{args[1]}|#{args[2]}}}\"]
         #{
         if args[4]!=''
-            'DataReaderClassName [shape=component]'
-            'args[0]_read -> DataReaderClassName [label=\"using\"]'
+            '#{args[0]}_DataReaderClassName [shape=component]'
+            'args[0]_read -> #{args[0]}_DataReaderClassName [label=\"using\"]'
         end}
-    }
+        }
 /,
         :VIZ_EXECUTE => %q/
-    subgraph #{args[0]}_execute_SG{
-        rank=same
-        #{args[0]}_execute [label=\"Execute #{args[1]}\"]
-        #{args[0]}_execute_anchor [style=invis shape=point]
+        subgraph #{args[0]}_#{args[1]}_execute_SG{
+            rank=same
+            #{args[0]}_execute_#{args[1]} [label=\"Execute #{args[1]}\"]
+            #{args[0]}_execute_anchor_#{args[1]} [style=invis shape=point]
         
-        #{args[0]}_execute_anchor -> #{args[1]}_anchor[lhead=cluster_#{args[1]}_SG]
-    }
+            #{args[0]}_execute_anchor_#{args[1]} -> #{args[1]}_anchor[lhead=cluster_#{args[1]}_SG dir=none headport=e]
+        }
         
 /,
         :VIZ_WRITE => %q/
-    subgraph #{args[0]}_write_SG{
-        rank=same
-        #{args[0]}_write[shape=Mrecord, label=\"{{#{args[1]}|#{args[2]}}|#{args[3]}}\"]
+        subgraph #{args[0]}_write_SG{
+            rank=same
+            #{args[0]}_write[shape=Mrecord, label=\"{{#{args[1]}|#{args[2]}}|#{args[3]}}\"]
         #{
         if args[4]!=''
-            'DataWriterClassName [shape=component]'
-            '#{args[0]}_write -> DataWriterClassName [label=\"using\"]'
+            '#{args[0]}_DataWriterClassName [shape=component]'
+            '#{args[0]}_write -> #{args[0]}_DataWriterClassName [label=\"using\"]'
         end}
-    }
+        }
 /,
         :VIZ_MAP => %q/
-    subgraph cluster_#{args[0]}_map_SG{
-        #{args[0]}_mapinput [shape=Mrecord label=\"#{args[1]}|#{args[2]}\"]
-        #{args[0]}_map [label=\"map\", shape=plaintext]
-        #{args[0]}_mapoutput [shape=Mrecord label=\"<outp> #{args[3]}|#{args[4]}\"]
-        mapClassName[shape=component]
-        {rank=same;#{args[0]}_map;mapClassName}
+        subgraph cluster_#{args[0]}_map_SG{
+            #{args[0]}_map_input [shape=Mrecord label=\"#{args[1]}|#{args[2]}\"]
+            #{args[0]}_map [label=\"map   \", shape=plaintext]
+            #{args[0]}_map_output [shape=Mrecord label=\"<outp> #{args[3]}|#{args[4]}\"]
+            #{args[0]}_map_ClassName[shape=component]
+            {rank=same;#{args[0]}_map;#{args[0]}_map_ClassName}
 
-        #{args[0]}_mapinput -> #{args[0]}_map [style=invis] 
-        #{args[0]}_map -> #{args[0]}_mapoutput[style=invis]
-        #{args[0]}_map -> mapClassName
-    }
+            #{args[0]}_map_input -> #{args[0]}_map [style=invis] 
+            #{args[0]}_map -> #{args[0]}_map_output[style=invis]
+            #{args[0]}_map -> #{args[0]}_map_ClassName
+        }
 /,
         :VIZ_REDUCE => %q/
-    subgraph cluster_#{args[0]}_reduce_SG{
-        #{args[0]}_reduceinput [shape=Mrecord label=\"#{args[1]}|#{args[2]}\"]
-        #{args[0]}_reduce [label=\"reduce\", shape=plaintext]
-        #{args[0]}_reduceoutput [shape=Mrecord label=\"<outp> #{args[3]}|#{args[4]}\"]
-        reduceClassName[shape=component]
-        {rank=same;#{args[0]}_reduce;reduceClassName}
+        subgraph cluster_#{args[0]}_reduce_SG{
+            #{args[0]}_reduce_input [shape=Mrecord label=\"#{args[1]}|#{args[2]}\"]
+            #{args[0]}_reduce [label=\"reduce\", shape=plaintext]
+            #{args[0]}_reduce_output [shape=Mrecord label=\"<outp> #{args[3]}|#{args[4]}\"]
+            #{args[0]}_reduce_ClassName[shape=component]
+            {rank=same;#{args[0]}_reduce;#{args[0]}_reduce_ClassName}
 
-        #{args[0]}_reduceinput -> #{args[0]}_reduce [style=invis] 
-        #{args[0]}_reduce -> #{args[0]}_reduceoutput[style=invis]
-        #{args[0]}_reduce -> reduceClassName
-    }
+            #{args[0]}_reduce_input -> #{args[0]}_reduce [style=invis] 
+            #{args[0]}_reduce -> #{args[0]}_reduce_output[style=invis]
+            #{args[0]}_reduce -> #{args[0]}_reduce_ClassName
+        }
 /,
-        # inputs required: job name, prev step name, curr step name, tail suffix, head suffix
         :VIZ_LINK => %q/
-        #{args[0]}_#{args[1]}#{args[3] if args[3]} -> #{args[0]}_#{args[2]}#{args[4] if args[4]}[lhead=#{(['read','write','execute'].include?args[2])?'':'cluster_'}#{args[0]}_#{args[2]}_SG] 
+        #{args[0]} -> #{args[1]}[lhead=#{args[2]] 
+/,
+        :VIZ_READ_HEAD => '#{args[0]}_read',
+        :VIZ_READ_TAIL => '#{args[0]}_read',
+        :VIZ_READ_SUBGRAPH => '#{args[0]}_read_SG',
 
-/
+        :VIZ_WRITE_HEAD => '#{args[0]}_write',
+        :VIZ_WRITE_TAIL => '#{args[0]}_write',
+        :VIZ_WRITE_SUBGRAPH => '#{args[0]}_write_SG',
+
+        :VIZ_EXECUTE_HEAD => '#{args[0]}_execute_#{args[1]}',
+        :VIZ_EXECUTE_TAIL => '#{args[0]}_execute_#{args[1]}',
+        :VIZ_EXECUTE_SUBGRAPH => '#{args[0]}_#{args[1]}_execute_SG',
+
+        :VIZ_MAP_HEAD => '#{args[0]}_map_input',
+        :VIZ_MAP_TAIL => '#{args[0]}_map_output',
+        :VIZ_MAP_SUBGRAPH => 'cluster_#{args[0]}_map_SG',
+
+        :VIZ_REDUCE_HEAD => '#{args[0]}_reduce_input',
+        :VIZ_REDUCE_TAIL => '#{args[0]}_reduce_output',
+        :VIZ_REDUCE_SUBGRAPH => 'cluster_#{args[0]}_reduce_SG',
+
+        :VIZ_LINK => %q/
+        #{args[0]} -> #{args[1]}[lhead=#{args[2]}] 
+/,
     }
 
 end
