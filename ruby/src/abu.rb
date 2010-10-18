@@ -295,7 +295,7 @@ static class #{args[0].capitalize}Reducer extends Reducer<#{args[1]},#{args[2]},
     node[shape=box style=rounded]
     //compound=true
     rankdir=TB
-    outputMode=nodesfirst
+    //outputMode=nodesfirst
 |,
         :VIZ_JOB_BOTTOM => %q|
     label=\"Script:#{args[0].capitalize}\"
@@ -418,7 +418,7 @@ gen_needed = ARGV[3].downcase.eql? 'gen' if ARGV[3] and !gen_needed
 viz_needed = ARGV[2].downcase.eql? 'viz' if ARGV[2]
 viz_needed = ARGV[3].downcase.eql? 'viz' if ARGV[3] and !viz_needed
 
-puts "#{gen_needed}, #{viz_needed}"
+# puts "#{gen_needed}, #{viz_needed}"
 abu = Abu.new script, outdir
 abu.parse
 abu.generate if gen_needed
