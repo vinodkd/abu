@@ -185,7 +185,7 @@ class Abu
             outfile.puts apply_template(:VIZ_JOB_BOTTOM, @the_job.to_a)
         end
         print "Generating png..."
-        dot_done = `dot -Tpng -o#{output_file}.png #{output_file}`
+        dot_done = `dot #{output_file} | neato -n -s -Tpng -o#{output_file}.png`
         print "done"
     end
 
@@ -332,7 +332,7 @@ static class #{args[0].capitalize}Reducer extends Reducer<#{args[1]},#{args[2]},
             #{args[0]}_execute_#{args[1]} [label=\"Execute #{args[1]}\"]
             #{args[0]}_execute_anchor_#{args[1]} [style=invis shape=point]
         
-            #{args[0]}_execute_anchor_#{args[1]} -> #{args[1]}_anchor[lhead=cluster_#{args[1]}_SG dir=none headport=e]
+            #{args[0]}_execute_anchor_#{args[1]} -> #{args[1]}_anchor[lhead=cluster_#{args[1]}_SG style=dashed arrowhead=box arrowtail=dot headport=e]
         }
         
 /,
