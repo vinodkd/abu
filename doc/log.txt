@@ -1,0 +1,6 @@
+10/23/2010: Starting log as this seems useful to explain changes chronologically
+10/23/2010: Feedback from Chug 1021:
+                - see how abu could be integrated with workflow engines for it to fully serve the purpose of a hadoop dsl
+                - make it a maven plugin so that viz could be integrated into the CI workflow
+                - keep the "java trapdoor" ie, the ability to drop down into the raw java code because that does make sense in a production scenario
+            Changing roadmap accordingly
