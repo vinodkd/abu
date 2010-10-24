@@ -1,0 +1,20 @@
+#! /usr/bin/env ruby
+# simple abu runner
+require "src/abu.rb"
+
+puts 'Abu: The hadoop scripting language, generator and visualizer'
+puts "Usage: <abu> script.abu outdir [gen|viz]+" if ARGV.length < 2
+script = ARGV[0]
+outdir = ARGV[1]
+
+gen_needed = ARGV[2].downcase.eql? 'gen' if ARGV[2]
+gen_needed = ARGV[3].downcase.eql? 'gen' if ARGV[3] and !gen_needed
+
+viz_needed = ARGV[2].downcase.eql? 'viz' if ARGV[2]
+viz_needed = ARGV[3].downcase.eql? 'viz' if ARGV[3] and !viz_needed
+
+# puts "#{gen_needed}, #{viz_needed}"
+abu = Abu.new script, outdir
+abu.parse
+abu.generate if gen_needed
+abu.visualize if viz_needed
