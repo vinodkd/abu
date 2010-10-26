@@ -1,4 +1,3 @@
-NOTE: SET YOUR EDITOR TO WRAP TEXT - DOCUMENT WRITTEN WITH HARD BREAKS ONLY AT SENTENCE END.
 Abu Solution Design
 ===================
 Grammar:

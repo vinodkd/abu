@@ -4,3 +4,4 @@
                 - make it a maven plugin so that viz could be integrated into the CI workflow
                 - keep the "java trapdoor" ie, the ability to drop down into the raw java code because that does make sense in a production scenario
             Changing roadmap accordingly
+10/25/2010: Working on using modules right. 
