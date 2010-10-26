@@ -229,15 +229,15 @@ module Abu
         end
 
         def get_tail(block,step)
-            apply_template ('VIZ_'+ step.class.name.split('::').last.upcase+'_TAIL').intern,[block.name] + step.to_a
+            apply_template( ('VIZ_'+ step.class.name.split('::').last.upcase+'_TAIL').intern,[block.name] + step.to_a)
         end
 
         def get_head(block,step)
-            apply_template ('VIZ_'+ step.class.name.split('::').last.upcase+'_HEAD').intern,[block.name] + step.to_a
+            apply_template( ('VIZ_'+ step.class.name.split('::').last.upcase+'_HEAD').intern,[block.name] + step.to_a)
         end
 
         def get_subgraph(block,step)
-            apply_template ('VIZ_'+ step.class.name.split('::').last.upcase+'_SUBGRAPH').intern,[block.name] + step.to_a
+            apply_template( ('VIZ_'+ step.class.name.split('::').last.upcase+'_SUBGRAPH').intern,[block.name] + step.to_a)
         end
     end
 
