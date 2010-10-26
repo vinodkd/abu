@@ -1,10 +1,4 @@
-def include_required
-    req=File.join(File.expand_path(File.dirname(__FILE__)), "templates")
-    puts "here"
-    require req
-end
-
-include_required
+require "templates"
 
 module Abu
     class Abu

@@ -1,13 +1,11 @@
 #! /usr/bin/env ruby
 # simple abu runner
 
-def include_required
-    require File.join(File.expand_path(File.dirname(__FILE__)), "src", "abu")
-end
+$:.<< './lib'   #add lib directory to path. This way abu can be run in non-gem mode as well.
+
+require "abu"
 
 def main
-    include_required
-
     puts 'Abu: The hadoop scripting language, generator and visualizer'
     puts "Usage: <abu> script.abu outdir [gen|viz]+" if ARGV.length < 2
     script = ARGV[0]
