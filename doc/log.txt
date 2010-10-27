@@ -16,3 +16,12 @@
             then save it, remove binding arg , save again, then move apply_template to templates.rb
 10/27/20107:11 AM: btw jruby is working now. problem turned out to be inclusion of a windows path in the classpath. removing qtjava.zip from classpath did the trick
 10/27/20109:16 AM: found reason for block_bottom not working: was still using ruby templates, not erb
+10/27/20105:01 PM: need to organize docs a bit. Idea.txt has the core idea, roadmap, some design and the colophon. Design.txt has some design discussion.
+                readme.markdown has a bit of the idea, a how to guide, a sample, and the colophon.
+                I should do the following:
+                    - readme.markdown will be the front page and point to the others.
+                    - keep Idea.txt to the original idea and colophon. Any new pie-in-the-sky ideas will be added here.
+                    - Move all design to design.txt
+                    - create a new roadmap file
+                    - create a new howto guide
+                    
