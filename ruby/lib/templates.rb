@@ -6,7 +6,7 @@ module Templates
         puts "processing #{section}.."
         if TEMPLATES.has_key? section
             template = ERB.new(Templates::TEMPLATES[section],nil,"<>")
-            template.result(bndg) #..which is the binding in this case
+            template.result(bndg) #..the binding to be used
         else
             puts "template for #{section} not found."
             ""  # return a blank string so output doesnt contain nil
