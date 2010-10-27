@@ -35,6 +35,7 @@ module Abu
             @refs = Array.new   # hold all references to names in the script
             @defs = Hash.new    # hold all definitions of such names in the script
             # @import_reqd = Set.new    # hold all names that will need imports
+            
         end
 
         def parse
@@ -116,11 +117,15 @@ module Abu
         def validate_flow
         end
 
+        def get_binding
+            binding
+        end
+        
         def generate
             output_file = File.join @outdir,@the_job.name.capitalize + ".java"
             File.open(output_file,"w+") do |outfile|
                 outfile.puts apply_template(:JOB_IMPORTS,[])
-                outfile.puts apply_template(:JOB_TOP,@the_job.to_a)
+                outfile.puts apply_template(:JOB_TOP,binding)
                 gen_defns(outfile)
                 gen_job(outfile)
                 outfile.puts apply_template(:JOB_BOTTOM, @the_job.to_a)
@@ -148,7 +153,7 @@ module Abu
         end
 
         def gen_job(outfile)
-            outfile.puts apply_template(:JOB_MAIN_TOP,@the_job.to_a)
+            outfile.puts apply_template(:JOB_MAIN_TOP,binding)
             @the_job.steps.each do |step|
                 blk= step.class.name.split('::').last
                 #puts blk
@@ -170,9 +175,14 @@ module Abu
 
         def apply_template(section,args)
             puts "processing #{section}.."
-            if TEMPLATES.has_key? section
-                template = TEMPLATES[section] 
-                instance_eval '"' + template + '"'
+            if Templates::TEMPLATES.has_key? section
+                if [:JOB_TOP,:JOB_MAIN_TOP].include? section
+                    template = ERB.new(Templates::TEMPLATES[section])
+                    template.result(args) #..which is the binding in this case
+                else
+                    template = Templates::TEMPLATES[section] 
+                    instance_eval '"' + template + '"'
+                end
             else
                 puts "template for #{section} not found."
                 ""  # return a blank string so output doesnt contain nil

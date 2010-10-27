@@ -1,5 +1,8 @@
-module Abu
-        TEMPLATES = {
+require 'erb'
+
+module Templates
+        
+    TEMPLATES = {
             :JOB_IMPORTS => %q|
     import org.apache.hadoop.conf.Configuration;
     import org.apache.hadoop.fs.Path;
@@ -13,7 +16,7 @@ module Abu
     import java.io.IOException;
 
     |,
-            :JOB_TOP => 'public class #{args[0].capitalize} {
+            :JOB_TOP => 'public class <%=@the_job.name.capitalize%> {
     ',
             :MR_MAP => %q|
     static class #{args[0].capitalize}Mapper extends Mapper<#{args[1]},#{args[2]},#{args[3]},#{args[4]}> {
@@ -34,7 +37,7 @@ module Abu
 
             // your code goes here
             Job job = new Job();
-            job.setJarByClass(#{args[0].capitalize}.class);
+            job.setJarByClass(<%=@the_job.name.capitalize%>.class);
     |,
             :JOB_READ => %q|
             FileInputFormat.addInputPath(job, new Path(\"#{args[3]}\"));
