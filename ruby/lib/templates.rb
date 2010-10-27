@@ -2,6 +2,17 @@ require 'erb'
 
 module Templates
         
+    def Templates.apply_template(section,bndg)
+        puts "processing #{section}.."
+        if TEMPLATES.has_key? section
+            template = ERB.new(Templates::TEMPLATES[section],nil,"<>")
+            template.result(bndg) #..which is the binding in this case
+        else
+            puts "template for #{section} not found."
+            ""  # return a blank string so output doesnt contain nil
+        end
+    end
+
     TEMPLATES = {
             :JOB_IMPORTS => %q|
 import org.apache.hadoop.conf.Configuration;
