@@ -5,3 +5,13 @@
                 - keep the "java trapdoor" ie, the ability to drop down into the raw java code because that does make sense in a production scenario
             Changing roadmap accordingly
 10/25/2010: Working on using modules right. 
+10/26/2010: Tried to get jruby to run; couldnt. Have forgotten how it worked before. jabu script has been created, but jruby is not running by itself either. TODO
+10/26/2010: was trying to move to erb for the templates, and reading about binding. Will need this to execute the templates in the context of the command being output.
+            - also need to find a way to have the templates as separate files instead of in the code.
+10/27/2010: All of this so that erb would allow for the templates to represent actual variable names instead of args0[xx].But that array is built from mutiple objects,
+            and not sure if its worth doing it now.
+            Larger refactor: Make pluggable templates, ie each command could have more than one gen and viz templates, that can be chosen on the fly. currently only
+            one template is supported.
+10/27/20107:05 AM : almost at end of erb conversion. wierdly only one template - viz-block-bottom requires escaped quotes. pending to be converted: all the link templates
+            then save it, remove binding arg , save again, then move apply_template to templates.rb
+10/27/20107:11 AM: btw jruby is working now. problem turned out to be inclusion of a windows path in the classpath. removing qtjava.zip from classpath did the trick
