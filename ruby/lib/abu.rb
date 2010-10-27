@@ -181,7 +181,8 @@ module Abu
         def apply_template(section,args=nil)
             puts "processing #{section}.."
             if Templates::TEMPLATES.has_key? section
-                if [:JOB_IMPORTS,:JOB_TOP,:JOB_BOTTOM,:MR_MAP,:MR_REDUCE, :JOB_MAIN_TOP,:JOB_MAP,:JOB_REDUCE,:JOB_READ,:JOB_WRITE].include? section
+                if [:JOB_IMPORTS,:JOB_TOP,:JOB_BOTTOM,:MR_MAP,:MR_REDUCE, :JOB_MAIN_TOP,:JOB_MAP,:JOB_REDUCE,:JOB_READ,:JOB_WRITE,
+                   :VIZ_JOB_TOP,:VIZ_JOB_BOTTOM,:VIZ_BLOCK_TOP,:VIZ_READ,:VIZ_WRITE, :VIZ_EXECUTE, :VIZ_MAP, :VIZ_REDUCE,:VIZ_BLOCK_BOTTOM, :VIZ_LINK].include? section
                     template = ERB.new(Templates::TEMPLATES[section],nil,"<>")
                     template.result(args) #..which is the binding in this case
                 else
@@ -197,10 +198,10 @@ module Abu
         def visualize
             output_file = File.join @outdir,@the_job.name.capitalize + ".gv"
             File.open(output_file,"w+") do |outfile|
-                outfile.puts apply_template(:VIZ_JOB_TOP,[])
+                outfile.puts apply_template(:VIZ_JOB_TOP,binding)
                 viz_defns outfile
                 viz_job outfile
-                outfile.puts apply_template(:VIZ_JOB_BOTTOM, @the_job.to_a)
+                outfile.puts apply_template(:VIZ_JOB_BOTTOM, binding)
             end
             print "Generating png..."
             dot_done = `dot #{output_file} | neato -n -s -Tpng -o#{output_file}.png`
@@ -220,39 +221,39 @@ module Abu
 
         def viz_block(block, outfile)
             oldstep=nil
-            outfile.puts apply_template(:VIZ_BLOCK_TOP, [block.name])
+            outfile.puts apply_template(:VIZ_BLOCK_TOP, binding)
             block.steps.each do |step|
                 # section name = <block name>_<step name> in caps to differntiate it from the symbols for the parse phase.
                 # this could do with some refactoring methinks.
                 #puts 'viz_block:',step, oldstep
                 step_type = step.class.name.split('::').last
                 section = ('VIZ_' + step_type.upcase).intern  
-                outfile.puts apply_template(section, [block.name] + step.to_a)
+                outfile.puts apply_template(section, binding)
                 if oldstep
                     viz_link block, oldstep, step, outfile
                 end
                 oldstep = step
             end
-            outfile.puts apply_template(:VIZ_BLOCK_BOTTOM, [block.name, block.class.name.split('::').last])
+            outfile.puts apply_template(:VIZ_BLOCK_BOTTOM, binding)
         end
 
         def viz_link(block, oldstep, step,outfile)
             tail = get_tail block,oldstep
             head = get_head block,step
             subgraph = get_subgraph block,step
-            outfile.puts apply_template(:VIZ_LINK, [tail,head,subgraph])
+            outfile.puts apply_template(:VIZ_LINK, binding)
         end
 
         def get_tail(block,step)
-            apply_template( ('VIZ_'+ step.class.name.split('::').last.upcase+'_TAIL').intern,[block.name] + step.to_a)
+            apply_template( ('VIZ_'+ step.class.name.split('::').last.upcase+'_TAIL').intern,binding)
         end
 
         def get_head(block,step)
-            apply_template( ('VIZ_'+ step.class.name.split('::').last.upcase+'_HEAD').intern,[block.name] + step.to_a)
+            apply_template( ('VIZ_'+ step.class.name.split('::').last.upcase+'_HEAD').intern,binding)
         end
 
         def get_subgraph(block,step)
-            apply_template( ('VIZ_'+ step.class.name.split('::').last.upcase+'_SUBGRAPH').intern,[block.name] + step.to_a)
+            apply_template( ('VIZ_'+ step.class.name.split('::').last.upcase+'_SUBGRAPH').intern,binding)
         end
     end
 

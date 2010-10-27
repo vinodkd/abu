@@ -15,3 +15,4 @@
 10/27/20107:05 AM : almost at end of erb conversion. wierdly only one template - viz-block-bottom requires escaped quotes. pending to be converted: all the link templates
             then save it, remove binding arg , save again, then move apply_template to templates.rb
 10/27/20107:11 AM: btw jruby is working now. problem turned out to be inclusion of a windows path in the classpath. removing qtjava.zip from classpath did the trick
+10/27/20109:16 AM: found reason for block_bottom not working: was still using ruby templates, not erb
