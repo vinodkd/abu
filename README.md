@@ -91,35 +91,6 @@ In a bash environment, run the following after downloading Abu:
 		}
 .. which you can then add implementations to, and run in Hadoop.
 
-Codebase Guide
-==============
-<table>
-  <tr>
-    <th>Directory</th><th align="left">Description</th>
-  </tr>
-  <tr>
-    <td>doc</td><td> Core idea and design documents</td>
-  </tr>
-  <tr>
-    <td>doc/Idea.txt</td><td> Original writeup of the idea</td>
-  </tr>
-  <tr>
-    <td>doc/Design.txt</td><td> Demonstrates evolutoin of the design</td>
-  </tr>
-  <tr>
-    <td>java</td><td> contains the source to the java parser for Abu. Very early stage</td>
-  </tr>
-  <tr>
-    <td>ruby</td><td> contains the source to the ruby version of Abu.</td>
-  </tr>
-  <tr>
-    <td>  - test</td><td> contains some test scripts in the ruby syntax.</td>
-  </tr>
-  <tr>
-    <td>viz</td><td> contains trial runs of creating map reduce diagrams at varying detail manually. Will be used as templates for the viz generator.</td>
-  </tr>
-  </table>
-
 About the name
 ==============
 I first intended to name this tool Ankush - the sanskrit name for the tool that real mahouts use to control elephants, especially as it made sense to me - this was a tool to help me understand and control the hadoop elephant. Another thought was to name it using the Doug Cutting Method(TM) - by asking my kids for one. That backfired because I couldnt get anything coherent (or sufficiently cute) even out of my 3.5 yr old. 
