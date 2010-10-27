@@ -4,56 +4,51 @@ module Templates
         
     TEMPLATES = {
             :JOB_IMPORTS => %q|
-    import org.apache.hadoop.conf.Configuration;
-    import org.apache.hadoop.fs.Path;
-    import org.apache.hadoop.io.*;      // kludge; should be fixed in future with imports to types used in script.
-    import org.apache.hadoop.mapreduce.Job;
-    import org.apache.hadoop.mapreduce.Mapper;
-    import org.apache.hadoop.mapreduce.Reducer;
-    import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-    import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.*;      // kludge; should be fixed in future with imports to types used in script.
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
-    import java.io.IOException;
-
-    |,
+import java.io.IOException;
+|,
             :JOB_TOP => 'public class <%=@the_job.name.capitalize%> {
     ',
             :MR_MAP => %q|
-    static class #{args[0].capitalize}Mapper extends Mapper<#{args[1]},#{args[2]},#{args[3]},#{args[4]}> {
-        public void map(#{args[1]} key,#{args[2]} value, Context context)   throws IOException, InterruptedException {
+    static class <%=name.capitalize%>Mapper extends Mapper<<%=step.k1%>,<%=step.v1%>,<%=step.k2%>,<%step.v2%>> {
+        public void map(<%=step.k1%> key,<%=step.v1%> value, Context context)   throws IOException, InterruptedException {
             // your code goes here
         }
-    }
-    |,
+    }|,
             :MR_REDUCE => %q|
-    static class #{args[0].capitalize}Reducer extends Reducer<#{args[1]},#{args[2]},#{args[3]},#{args[4]}> {
-        public void reduce(#{args[1]} key, Iterable<#{args[2]}> values, Context context)    throws IOException, InterruptedException {
+    static class <%=name.capitalize%>Reducer extends Reducer<<%=step.k2%>,<%=step.v2%>,<%=step.k3%>,<%step.v3%>> {
+        public void reduce(<%=step.k2%> key, Iterable<<%=step.v2%>> values, Context context)    throws IOException, InterruptedException {
             // your code goes here
         }
-    }
-    |,
+    }|,
             :JOB_MAIN_TOP => %q|
         public static void main(String[] args) throws Exception {
 
             // your code goes here
             Job job = new Job();
-            job.setJarByClass(<%=@the_job.name.capitalize%>.class);
-    |,
+            job.setJarByClass(<%=@the_job.name.capitalize%>.class);|,
             :JOB_READ => %q|
-            FileInputFormat.addInputPath(job, new Path(\"#{args[3]}\"));
-    |,
-            :JOB_MAP => '\n\t\tjob.setMapperClass(#{args[0].capitalize}Mapper.class);',
-            :JOB_REDUCE => '\n\t\tjob.setReducerClass(#{args[0].capitalize}Reducer.class);',
+            FileInputFormat.addInputPath(job, new Path("<%=step.path%>"));|,
+            :JOB_MAP => %q|
+            job.setMapperClass(<%=mrdef.name.capitalize%>Mapper.class);|,
+            :JOB_REDUCE => %q|
+            job.setReducerClass(<%=mrdef.name.capitalize%>Reducer.class);|,
             :JOB_WRITE => %q|   
-            FileOutputFormat.setOutputPath(job, new Path(\"#{args[3]}\"));
-            job.setOutputKeyClass(#{args[1]}.class);
-            job.setOutputValueClass(#{args[2]}.class);
-    |,
+            FileOutputFormat.setOutputPath(job, new Path("<%=step.path%>"));
+            job.setOutputKeyClass(<%=step.k3%>.class);
+            job.setOutputValueClass<%=step.v3%>.class);|,
 
             :JOB_MAIN_BOTTOM => %q|
             System.exit(job.waitForCompletion(true) ? 0 : 1);
-        }
-    |,
+        }|,
             :JOB_BOTTOM => '}',
 
             :VIZ_JOB_TOP => %q|digraph G{

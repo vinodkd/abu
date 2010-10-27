@@ -116,19 +116,23 @@ module Abu
 
         def validate_flow
         end
-
-        def get_binding
-            binding
+        
+        def get_proc
+            if @the_proc
+                @the_proc 
+            else
+                @the_proc= Proc.new
+            end
         end
         
         def generate
             output_file = File.join @outdir,@the_job.name.capitalize + ".java"
             File.open(output_file,"w+") do |outfile|
-                outfile.puts apply_template(:JOB_IMPORTS,[])
+                outfile.puts apply_template(:JOB_IMPORTS,binding)
                 outfile.puts apply_template(:JOB_TOP,binding)
                 gen_defns(outfile)
                 gen_job(outfile)
-                outfile.puts apply_template(:JOB_BOTTOM, @the_job.to_a)
+                outfile.puts apply_template(:JOB_BOTTOM, binding)
             end
 
         end
@@ -138,7 +142,8 @@ module Abu
                 step_name = step.class.name.split('::').last
                 if ['Map','Reduce'].include? step_name
                     section = ('MR_'+ step_name.upcase).intern
-                    outfile.puts apply_template(section, [@the_job.name] + step.to_a)
+                    name=@the_job.name
+                    outfile.puts apply_template(section, binding)
                 end
             end
             @defs.each_value do |defn|
@@ -146,8 +151,8 @@ module Abu
                     # section name = <block name>_<step name> in caps to differntiate it from the symbols for the parse phase.
                     # this could do with some refactoring methinks.
                     section = ('MR_' + step.class.name.split('::').last.upcase).intern  
-
-                    outfile.puts apply_template(section, [defn.name] + step.to_a)
+                    name = defn.name
+                    outfile.puts apply_template(section,binding)
                 end
             end
         end
@@ -163,21 +168,21 @@ module Abu
                     mrdef.steps.each do |mrstep|
                         mrblk = mrstep.class.name.split('::').last
                         section = ('JOB_' + mrblk.upcase).intern
-                        outfile.puts apply_template(section,[mrdef.name] + mrstep.to_a)
+                        outfile.puts apply_template(section,binding)
                     end
                 else
                     section = ('JOB_' + blk.upcase).intern
-                    outfile.puts apply_template(section, [@the_job.name] + step.to_a)
+                    outfile.puts apply_template(section, binding)
                 end
             end
             outfile.puts apply_template(:JOB_MAIN_BOTTOM, @the_job.to_a)
         end
 
-        def apply_template(section,args)
+        def apply_template(section,args=nil)
             puts "processing #{section}.."
             if Templates::TEMPLATES.has_key? section
-                if [:JOB_TOP,:JOB_MAIN_TOP].include? section
-                    template = ERB.new(Templates::TEMPLATES[section])
+                if [:JOB_IMPORTS,:JOB_TOP,:JOB_BOTTOM,:MR_MAP,:MR_REDUCE, :JOB_MAIN_TOP,:JOB_MAP,:JOB_REDUCE,:JOB_READ,:JOB_WRITE].include? section
+                    template = ERB.new(Templates::TEMPLATES[section],nil,"<>")
                     template.result(args) #..which is the binding in this case
                 else
                     template = Templates::TEMPLATES[section] 
