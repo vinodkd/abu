@@ -1,3 +1,47 @@
+Abu Sample scripts[Design]:
+======================
+1. Simple job:
+
+job job1:
+    read    (k1:type,v1:type) from "/path/to/file.ext"  using DataReaderClassName
+    map     (k1:type,v1:type) to    (k2:type,v2:type)   using mapClassname 
+    reduce  (k2:type,v2:type) to    (k2:type,v2:type)   using redClassname
+    write   (k3:type,v3:type) to    "/path/to/file.ext"     using DataWriterClassName
+
+2. Simple job with mapred abstracted out and named:
+job job1:
+    read    (k1:type,v1:type) from "/path/to/file.ext"  using DataReaderClassName
+    mr1 (k1:type,v1:type) to    (k3:type,v3:type)
+    write   (k3:type,v3:type) to    "/path/to/file.ext"     using DataWriterClassName
+
+mapreduce mr1:
+    map     (k1:type,v1:type) to    (k2:type,v2:type)   using mapClassname 
+    reduce  (k2:type,v2:type) to    (k2:type,v2:type)   using redClassname
+
+3. Chained job:
+
+job job1:
+    read    (k1:type,v1:type) from "/path/to/file.ext"  using DataReaderClassName
+    mr1 (k1:type,v1:type) to    (k3:type,v3:type)
+    mr2 (k3:type,v3:type) to    (k5:type,v5:type)
+    write   (k5:type,v5:type) to    "/path/to/file.ext"     using DataWriterClassName
+// mr1 same as before
+mapreduce mr2:
+    map     (k3:type,v3:type) to    (k4:type,v4:type)   using mapClassname 
+    reduce  (k4:type,v4:type) to    (k5:type,v5:type)   using redClassname
+
+4. mapred defn with optional reducer:
+mapreduce mr34:
+    map     (k3:type,v3:type) to    (k4:type,v4:type)   using mapClassname 
+
+5. mapred defn with optional mapper:
+mapreduce mr43:
+    reduce  (k4:type,v4:type) to    (k5:type,v5:type)   using redClassname
+
+6. Tuple definitions: 
+    - Dont care value in tuple: (_, field2, field 3)
+    - List of objects of a type: [type] or [var] where var of type 'type'
+
 Abu Solution Design
 ===================
 Grammar:
