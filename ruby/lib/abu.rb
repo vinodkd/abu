@@ -181,14 +181,8 @@ module Abu
         def apply_template(section,args=nil)
             puts "processing #{section}.."
             if Templates::TEMPLATES.has_key? section
-                if [:JOB_IMPORTS,:JOB_TOP,:JOB_BOTTOM,:MR_MAP,:MR_REDUCE, :JOB_MAIN_TOP,:JOB_MAP,:JOB_REDUCE,:JOB_READ,:JOB_WRITE,
-                   :VIZ_JOB_TOP,:VIZ_JOB_BOTTOM,:VIZ_BLOCK_TOP,:VIZ_READ,:VIZ_WRITE, :VIZ_EXECUTE, :VIZ_MAP, :VIZ_REDUCE,:VIZ_BLOCK_BOTTOM, :VIZ_LINK].include? section
-                    template = ERB.new(Templates::TEMPLATES[section],nil,"<>")
-                    template.result(args) #..which is the binding in this case
-                else
-                    template = Templates::TEMPLATES[section] 
-                    instance_eval '"' + template + '"'
-                end
+                template = ERB.new(Templates::TEMPLATES[section],nil,"<>")
+                template.result(args) #..which is the binding in this case
             else
                 puts "template for #{section} not found."
                 ""  # return a blank string so output doesnt contain nil
