@@ -71,9 +71,10 @@ Milestone 1 (v 0.1):
     - build parser: Basic parser done. Recognizes the keyword and basic structure expected.
 Milestone 2 (v 0.2):
     - build (j)ruby parser + generator + visualizer (no validation or 'smarts')
-    - make it shebang runnable and evaluate making a maven plugin/ant task
+    - make it shebang runnable 
     - refactor code to make it better/DRY
     - revalutate including java "trapdoors" per feedback from CHUG session
+    - evaluate making a maven plugin/ant task
 Milestone 3 (v 0.3):
     - build java code generator
     - build java visualizer
