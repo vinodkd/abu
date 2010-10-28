@@ -32,7 +32,7 @@ See [the roadmap](abu/blob/master/doc/roadmap.md)
 Developers Guide
 =================
    - See [the codebase contents guide](abu/blob/master/CONTENTS.md), and 
-   - Read [Abu's Design] (abu/blob/master/doc/roadmap.md)
+   - Read [Abu's Design](abu/blob/master/doc/roadmap.md)
    - ...but for the most part, use the source :)
 
 About the name
