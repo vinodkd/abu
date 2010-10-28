@@ -126,6 +126,8 @@ module Abu
         end
         
         def generate
+            puts "gen: processing #{@the_job.name}"
+            
             output_file = File.join @outdir,@the_job.name.capitalize + ".java"
             File.open(output_file,"w+") do |outfile|
                 outfile.puts Templates.apply_template(:JOB_IMPORTS,binding)
@@ -180,6 +182,8 @@ module Abu
 
 
         def visualize
+            puts "viz:processing #{@the_job.name}"
+
             output_file = File.join @outdir,@the_job.name.capitalize + ".gv"
             File.open(output_file,"w+") do |outfile|
                 outfile.puts Templates.apply_template(:VIZ_JOB_TOP,binding)
@@ -198,7 +202,7 @@ module Abu
 
         def viz_defns(outfile)
             @defs.each_value do |defn|
-                puts "Processing #{defn.name}.."
+                puts "processing #{defn.name}.."
                 viz_block defn, outfile
             end
         end

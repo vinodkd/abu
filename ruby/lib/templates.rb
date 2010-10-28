@@ -1,14 +1,26 @@
 require 'erb'
 
 module Templates
-        
+    
+    TEMPLATE_LOC = File.join(File.dirname(__FILE__),'..','templates')
+    
     def Templates.apply_template(section,bndg)
-        puts "processing #{section}.."
-        if TEMPLATES.has_key? section
-            template = ERB.new(Templates::TEMPLATES[section],nil,"<>")
-            template.result(bndg) #..the binding to be used
+        print "\tprocessing #{section}".ljust(35,".")
+        
+        t_file = File.join(TEMPLATE_LOC,section.to_s.downcase + '.erb')
+        if File.exists? t_file
+            t_src = File.new(t_file).read()
+        elsif TEMPLATES.has_key? section
+            t_src=TEMPLATES[section]
+        end
+        
+        if t_src
+            template = ERB.new(t_src,nil,"<>")
+            res=template.result(bndg) #..the binding to be used
+            puts "done"
+            res
         else
-            puts "template for #{section} not found."
+            puts "template not found."
             ""  # return a blank string so output doesnt contain nil
         end
     end
@@ -67,11 +79,6 @@ import java.io.IOException;
         //compound=true
         rankdir=TB
         //outputMode=nodesfirst
-    |,
-            :VIZ_JOB_BOTTOM => %q|
-        label="Script:<%=@the_job.name.capitalize%>"
-        labelloc=t
-    }
     |,
             :VIZ_BLOCK_TOP => %q/
         subgraph cluster_<%=block.name%>_SG{
