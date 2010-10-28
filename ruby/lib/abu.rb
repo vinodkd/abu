@@ -175,7 +175,7 @@ module Abu
                     outfile.puts Templates.apply_template(section, binding)
                 end
             end
-            outfile.puts Templates.apply_template(:JOB_MAIN_BOTTOM, @the_job.to_a)
+            outfile.puts Templates.apply_template(:JOB_MAIN_BOTTOM, binding)
         end
 
 
