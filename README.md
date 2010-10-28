@@ -12,6 +12,7 @@ Abu does require you to know about Hadoop, and actually is intended as a learnin
 
 Having said that, its conceivable that some point in the future it does allow such definition, specifically via the (J)Ruby syntax.How this will actually work is  WIP.
 
+For a more conversational exposition of Abu, check out my [presentation](abu/raw/master/doc/Abu-CHUG10212110.pptx) given at [CHUG](http://www.meetup.com/Chicago-area-Hadoop-User-Group-CHUG/) on Oct 21st 2010
 Goals:
 ======
 - no boilerplate, just the core logic
