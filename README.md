@@ -39,7 +39,7 @@ Developers Guide
 About the name
 ==============
 I first intended to name this tool Ankush - the sanskrit name for the tool that real mahouts use to control elephants, especially as it made sense to me - this was a tool to help me understand and control the hadoop elephant. Another thought was to name it using the Doug Cutting Method(TM) - by asking my kids for one. That backfired because I couldnt get anything coherent (or sufficiently cute) even out of my 3.5 yr old. 
-So I started looking at elephants that kids knew about. Dumbo seemed somehow inappropriate, but [Abu the monkey-turned-elephant from Alladin seemed to fit. So there you go :)
+So I started looking at elephants that kids knew about. Dumbo seemed somehow inappropriate, but Abu the monkey-turned-elephant from Alladin seemed to fit. So there you go :)
 
 #### Disclaimer
 The picture of Abu is from http://disney.wikia.com/wiki/Aladdin. No copyright infringement is intended with its use here. If you own the image and want it taken down, please let me know.

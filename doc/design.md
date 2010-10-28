@@ -145,6 +145,8 @@ Ruby Specifics
    - visualize   : method that generates graphviz dot format output from the dsl that was parsed.
    - run     : future method that will allow actual running of the script as is
 - Module Templates: contains templating logic
+      - allow file references
+      - allow partials
 - Template files: erb files that contain the templates themselves
 
 Redesign thoughts:
