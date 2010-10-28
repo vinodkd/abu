@@ -24,4 +24,8 @@
                     - Move all design to design.txt
                     - create a new roadmap file
                     - create a new howto guide
-                    
+10/28/20106:38 AM: Productive morning. Rearranged and fixed markdown syntax of most documents, made some improvements in the erb migration. moved one template to an external file, and made the tool work with it seems to work fine.
+    next steps: 
+        - migrate more templates
+        - evaluate moving the generate and visualize to templates themselves.
+    
