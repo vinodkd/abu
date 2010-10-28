@@ -23,15 +23,15 @@ Goals:
 
 Using Abu
 ===========
-See [the user guide|raw/master/doc/guide.md]
+See [the user guide](raw/master/doc/guide.md)
 
 Roadmap
 =======
-See [the roadmap|raw/master/doc/roadmap.md]
+See [the roadmap](raw/master/doc/roadmap.md)
 
 Codebase Contents
 =================
-See [the codebase contents guide|raw/master/CONTENTS.md]
+See [the codebase contents guide](raw/master/CONTENTS.md)
 
 About the name
 ==============
