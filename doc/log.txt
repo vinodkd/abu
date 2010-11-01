@@ -28,4 +28,9 @@
     next steps: 
         - migrate more templates
         - evaluate moving the generate and visualize to templates themselves.
+10/28/201010:53 AM: might be a good idea to have all templates of one kind in one directory for ease of packaging.
+10/31/201010:04 AM: Still working on defining the syntax for java code and existing job inclusion into abu.problems to be worked out:
+                    - how to represent :at_class and :at_main java code for individual map and reduce steps. Might have to introduce child methods for those commands, which means refactor to make them classes of their own. Ans: make them optional attributes of the map and reduce commands.
+                    - how to represent external jobs such that the generated java class will actually invoke them. Currently i've represented them as forked jobs, but how will that work within the overall workflow? this is tbd. might need to make some compromises
+                    
     

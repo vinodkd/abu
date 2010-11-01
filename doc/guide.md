@@ -1,5 +1,11 @@
 Using Abu
 ===========
+Getting Started
+Tutorial
+Abu Syntax
+Generating Code
+Generating Visualization(s)
+
 Abu has two syntaxes - the original, and the ruby adapted one. As on date, the original is still a WIP, so presented here is the Max temperature example from Hadoop:The Definitive Guide written as a ruby abu script:
 
         job 'MaxTemperature' do
