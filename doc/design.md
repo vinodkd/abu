@@ -199,11 +199,12 @@ In coming up with a command to represent jobs that exist already, I am in a quan
 	
 #### java inclusion: 
 Java code can be logically included at quite a few places in the generated code:
-   - In place of the java classname anywhere the syntax accepts classnames. This is an easy fix.
-   - In the scope of of overall job, ie global to both the inner map and reduce classes, which further be refined as:
-      - in the class scope
-      - in main()'s scope
-   - in the scope of the individual map and reduce classes, with the same refinement possible.
+
+* In place of the java classname anywhere the syntax accepts classnames. This is an easy fix.
+* In the scope of of overall job, ie global to both the inner map and reduce classes, which further be refined as:
+  ** in the class scope
+  ** in main()'s scope
+* in the scope of the individual map and reduce classes, with the same refinement possible.
 
    So one idea I had was a syntax like so:
 
