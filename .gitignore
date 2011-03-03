@@ -4,3 +4,4 @@
 *.tws
 # Ignore the chug presentation
 *.pptx
+.redcar
