@@ -2,7 +2,7 @@ require 'erb'
 
 module Templates
     
-    TEMPLATE_LOC = File.join(File.dirname(__FILE__),'..','templates')
+    TEMPLATE_LOC = File.join(File.dirname(__FILE__),'templates')
     
     def Templates.apply_template(section,bndg)
         print "\tprocessing #{section}".ljust(35,".")
