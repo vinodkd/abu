@@ -41,14 +41,14 @@ import java.io.IOException;
             :JOB_TOP => 'public class <%=@the_job.name.capitalize%> {
     ',
             :MR_MAP => %q|
-    static class <%=name.capitalize%>Mapper extends Mapper<<%=step.k1%>,<%=step.v1%>,<%=step.k2%>,<%step.v2%>> {
-        public void map(<%=step.k1%> key,<%=step.v1%> value, Context context)   throws IOException, InterruptedException {
+    static class <%=name.capitalize%>Mapper extends Mapper< <%=step.k1.type%>, <%=step.v1.type%>, <%=step.k2.type%>, <%=step.v2.type%> > {
+        public void map(<%=step.k1.type%> <%=step.k1.name%>, <%=step.v1.type%> <%=step.v1.name%>, Context context)   throws IOException, InterruptedException {
             // your code goes here
         }
     }|,
             :MR_REDUCE => %q|
-    static class <%=name.capitalize%>Reducer extends Reducer<<%=step.k2%>,<%=step.v2%>,<%=step.k3%>,<%step.v3%>> {
-        public void reduce(<%=step.k2%> key, Iterable<<%=step.v2%>> values, Context context)    throws IOException, InterruptedException {
+    static class <%=name.capitalize%>Reducer extends Reducer<<%=step.k2.type%>,<%=step.v2.type%>,<%=step.k3.type%>,<%=step.v3.type%>> {
+        public void reduce(<%=step.k2.type%> <%=step.k2.name%>, Iterable<<%=step.v2.type%>> <%=step.v2.name%>, Context context)    throws IOException, InterruptedException {
             // your code goes here
         }
     }|,
@@ -66,8 +66,8 @@ import java.io.IOException;
             job.setReducerClass(<%=mrdef.name.capitalize%>Reducer.class);|,
             :JOB_WRITE => %q|   
             FileOutputFormat.setOutputPath(job, new Path("<%=step.path%>"));
-            job.setOutputKeyClass(<%=step.k3%>.class);
-            job.setOutputValueClass<%=step.v3%>.class);|,
+            job.setOutputKeyClass(<%=step.k3.type%>.class);
+            job.setOutputValueClass(<%=step.v3.type%>.class);|,
 
             :JOB_MAIN_BOTTOM => %q|
             System.exit(job.waitForCompletion(true) ? 0 : 1);

@@ -3,6 +3,7 @@ require "templates"
 module Abu
     class Abu
         # structs to hold parsed values
+        Var = Struct.new(:name, :type)
         Job = Struct.new(:name, :steps)
         Read = Struct.new(:k1,:v1,:path,:using)
         Write = Struct.new(:k3,:v3,:path,:using)
@@ -30,23 +31,26 @@ module Abu
                 puts "Error: #{outdir} doesnt exist or isn't a directory"
                 exit
             end
-            @the_job        # we'll find the name of the job when we parse it, 
-                            # so this is only to show that i've yet to get rid of my java roots :(
-            @refs = Array.new   # hold all references to names in the script
-            @defs = Hash.new    # hold all definitions of such names in the script
-            # @import_reqd = Set.new    # hold all names that will need imports
-            
+            @the_job                    # we'll find the name of the job when we parse it, 
+                                        # so this is only to show that i've yet to get rid of my java roots :(
+            @refs          = Array.new  # hold all references to names in the script
+            @defs          = Hash.new   # hold all definitions of such names in the script
+            #@import_reqd   = Set.new    # hold all names that will need imports
+            @vars          = Hash.new   # holds all the variables declared in the job.
+            # TODO: determine how to handle vars in the mapreduce jobs themselves.
+            @unnamedvars   = 0          # counter that helps create unique names for variables left unnamed by the user
         end
 
         def parse
             @script = File.new(@script_file).read()
-            instance_eval(@script)
+            instance_eval(@script, @script_file)
             #debug_ast
             validate_refs
             validate_flow
         end
 
         def job(name)
+          #p "job"
             raise "Only one job per script" if @the_job
             @the_job = Job.new(name,[])
             @current_context=@the_job
@@ -55,7 +59,8 @@ module Abu
             end
         end
 
-        def mapreduce(name)
+        def mapreduce(name,key1, value1, key3, value3)
+          #p "mr"
             mrjob=MapReduce.new(name,[])
             @current_context = mrjob
             @defs[name] = mrjob
@@ -64,33 +69,94 @@ module Abu
             end
         end
 
-        def read(key, value, from, using)
+        def read(key, value, from, using = '')
+          #p "read"
             raise "read can be used only inside job" if @current_context.class != Job
-            @current_context.steps << Read.new(key,value,from,using)
+            keyvar = process_key key 
+            valuevar = process_val value
+            @current_context.steps << Read.new(keyvar,valuevar,from,using)
+        end
+        
+        def map(key1, value1, key2, value2, using = '')
+          #p "map"
+            key1var = process_key key1
+            val1var = process_val value1
+            key2var = process_key key2
+            val2var = process_val value2
+            
+            @current_context.steps << Map.new(key1var,val1var,key2var,val2var,using)
         end
 
-        def map(key1, value1, key2, value2, using)
-            @current_context.steps << Map.new(key1,value1,key2,value2,using)
-        end
+        def reduce(key2, listOfvalue2, key3, value3, using = '')
+          #p "reduce"
+            key2var = process_key key2
+            val2var = process_val listOfvalue2
+            key3var = process_key key3
+            val3var = process_val value3
 
-        def reduce(key2, listOfvalue2, key3, value3, using)
-            @current_context.steps << Reduce.new(key2, listOfvalue2, key3, value3, using)
+            @current_context.steps << Reduce.new(key2var, val2var, key3var, val3var, using)
         end
 
         def execute(name,key1, value1, key3, value3)
+          #p "exec"
             raise "execute can be used only inside job" if @current_context.class != Job
-            call_to_mr = Execute.new(name, key1,value1,key3,value3)
+            
+            key1var = process_key key1
+            val1var = process_val value1
+            key3var = process_key key3
+            val3var = process_val value3
+
+            call_to_mr = Execute.new(name, key1var,val1var,key3var,val3var)
             @current_context.steps << call_to_mr
             @refs << call_to_mr
         end
 
-        def write(key, value, to, using)
+        def write(key, value, to, using = '')
+          #p "write"
             raise "write can be used only inside job" if !@current_context.class == Job
-            @current_context.steps << Write.new(key,value,to,using)
+            keyvar = process_key key
+            valvar = process_val value
+            @current_context.steps << Write.new(keyvar,valvar,to,using)
         end
 
         def method_missing(name, *args, &block)
             puts "#{name} not found"
+        end
+
+        def process_key(var)
+          process_var var, 'key'
+        end
+        
+        def process_val(var)
+          process_var var, 'value'
+        end
+        
+        def process_var(var, defaultname, defaultType = 'Text')
+          raise "value cannot be blank" if var ==""
+          
+          parts = var.split ':'
+          raise "value cannot be blank" if parts.length == 0
+              
+          name = parts[0].strip
+          if name.empty? 
+            @unnamedvars += 1
+            name = defaultname + @unnamedvars
+          end
+          typ = parts.length > 1 ? parts[1].strip : "" 
+          
+          #p "b4:#{name}, #{typ}"
+          
+          # if its a known name, check if the type matches, and if not, raise hell
+          if @vars.has_key? name
+            raise "#{name} is previously defined as of type: #{@vars[name]}" if !typ.empty? and typ != @vars[name]
+            typ = @vars[name]
+          else
+            # add it to list of known definitions, which includes mr job names
+            typ = defaultType if typ.empty?
+            @vars[name] = typ
+          end
+          #p "#{name}, #{typ}, #{@vars[name]}"
+          return Var.new name, typ 
         end
 
         def debug_ast
