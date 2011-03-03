@@ -10,8 +10,10 @@ module Templates
         t_file = File.join(TEMPLATE_LOC,section.to_s.downcase + '.erb')
         if File.exists? t_file
             t_src = File.new(t_file).read()
+            t_name = t_file
         elsif TEMPLATES.has_key? section
             t_src=TEMPLATES[section]
+            t_name = section
         end
         
         if t_src
