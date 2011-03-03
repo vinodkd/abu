@@ -26,32 +26,7 @@ module Templates
     end
 
     TEMPLATES = {
-            :JOB_IMPORTS => %q|
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.*;      // kludge; should be fixed in future with imports to types used in script.
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-
-import java.io.IOException;
-|,
-            :JOB_TOP => 'public class <%=@the_job.name.capitalize%> {
-    ',
-            :MR_MAP => %q|
-    static class <%=name.capitalize%>Mapper extends Mapper< <%=step.k1.type%>, <%=step.v1.type%>, <%=step.k2.type%>, <%=step.v2.type%> > {
-        public void map(<%=step.k1.type%> <%=step.k1.name%>, <%=step.v1.type%> <%=step.v1.name%>, Context context)   throws IOException, InterruptedException {
-            // your code goes here
-        }
-    }|,
-            :MR_REDUCE => %q|
-    static class <%=name.capitalize%>Reducer extends Reducer<<%=step.k2.type%>,<%=step.v2.type%>,<%=step.k3.type%>,<%=step.v3.type%>> {
-        public void reduce(<%=step.k2.type%> <%=step.k2.name%>, Iterable<<%=step.v2.type%>> <%=step.v2.name%>, Context context)    throws IOException, InterruptedException {
-            // your code goes here
-        }
-    }|,
+      # TODO: figure out why this template fails when externalized.
             :JOB_MAIN_TOP => %q|
         public static void main(String[] args) throws Exception {
 
@@ -69,102 +44,8 @@ import java.io.IOException;
             job.setOutputKeyClass(<%=step.k3.type%>.class);
             job.setOutputValueClass(<%=step.v3.type%>.class);|,
 
-            :JOB_MAIN_BOTTOM => %q|
-            System.exit(job.waitForCompletion(true) ? 0 : 1);
-        }|,
             :JOB_BOTTOM => '}',
 
-            :VIZ_JOB_TOP => %q|digraph G{
-        node[shape=box style=rounded]
-        //compound=true
-        rankdir=TB
-        //outputMode=nodesfirst
-    |,
-            :VIZ_BLOCK_TOP => %q/
-        subgraph cluster_<%=block.name%>_SG{
-            <%=block.name%>_anchor [style=invis shape=point]
-            headport=e/,
-
-            :VIZ_BLOCK_BOTTOM => %q/
-            labelloc=t
-            label="<%block.name%>:<%=block.class.name.split('::').last%>"
-        }
-
-     /,
-            # requires jobname before the read values
-            # had to change the heredoc sigil to / from | as its used in the dot format.
-            :VIZ_READ => %q/
-            subgraph <%=block.name%>_read_SG{
-                rank=same
-                <%=block.name%>_read[shape=Mrecord, label="{<%=step.path%>|{<%=step.k1%>|<%=step.v1%>}}"]
-            <%
-            if step.using!=''
-            %>
-                <%=block.name%>_<%=step.using%> [shape=component]
-                <%=block.name%>_read -> <%=block.name%>_<%=step.using%>[label="using"]'
-            <%
-            end
-            %>
-            }
-    /,
-            :VIZ_EXECUTE => %q/
-            subgraph <%=block.name%>_<%=step.name%>_execute_SG{
-                rank=same
-                <%=block.name%>_execute_<%=step.name%> [label="Execute <%=step.name%>"]
-                <%=block.name%>_execute_anchor_<%=step.name%> [style=invis shape=point]
-
-                <%=block.name%>_execute_anchor_<%=step.name%> -> <%=step.name%>_anchor[lhead=cluster_<%=step.name%>_SG style=dashed arrowhead=box arrowtail=dot headport=e]
-            }
-
-    /,
-            :VIZ_WRITE => %q/
-            subgraph <%=block.name%>_write_SG{
-                rank=same
-                <%=block.name%>_write[shape=Mrecord, label="{{<%=step.k3%>|<%=step.v3%>}|<%=step.path%>}"]
-            <%
-            if step.using!=''
-            %>
-                <%=block.name%>_<%=step.using%> [shape=component]
-                <%=block.name%>_write -> <%=block.name%>_<%=step.using%> [label="using"]
-            <%
-            end
-            %>
-            }
-    /,
-            :VIZ_MAP => %q/
-            subgraph cluster_<%=block.name%>_map_SG{
-                <%=block.name%>_map_input [shape=Mrecord label="<%=step.k1%>|<%=step.v1%>"]
-                <%=block.name%>_map [label="map   ", shape=plaintext]
-                <%=block.name%>_map_output [shape=Mrecord label="<outp> <%=step.k2%>|<%=step.v2%>"]
-                <% if step.using!=''%>
-                <%=step.using%> [shape=component]
-                {rank=same;<%=block.name%>_map;<%=step.using%>}
-                <%end%>
-
-                <%=block.name%>_map_input -> <%=block.name%>_map [style=invis] 
-                <%=block.name%>_map -> <%=block.name%>_map_output[style=invis]
-                <% if step.using!=''%>
-                <%=block.name%>_map -> <%=step.using%>
-                <%end%>
-            }
-    /,
-            :VIZ_REDUCE => %q/
-            subgraph cluster_<%=block.name%>_reduce_SG{
-                <%=block.name%>_reduce_input [shape=Mrecord label="<%=step.k2%>|<%=step.v2%>"]
-                <%=block.name%>_reduce [label="reduce", shape=plaintext]
-                <%=block.name%>_reduce_output [shape=Mrecord label="<outp> <%=step.k3%>|<%=step.v3%>"]
-                <%if step.using!=''%>
-                <%=step.using%> [shape=component]
-                {rank=same;<%=block.name%>_reduce;<%=step.using%>}
-                <%end%>
-
-                <%=block.name%>_reduce_input -> <%=block.name%>_reduce [style=invis] 
-                <%=block.name%>_reduce -> <%=block.name%>_reduce_output[style=invis]
-                <% if step.using!=''%>
-                <%=block.name%>_reduce -> <%=step.using%>
-                <%end%>
-            }
-    /,
             :VIZ_READ_HEAD => '<%=block.name%>_read',
             :VIZ_READ_TAIL => '<%=block.name%>_read',
             :VIZ_READ_SUBGRAPH => '<%=block.name%>_read_SG',
@@ -184,9 +65,5 @@ import java.io.IOException;
             :VIZ_REDUCE_HEAD => '<%=block.name%>_reduce_input',
             :VIZ_REDUCE_TAIL => '<%=block.name%>_reduce_output',
             :VIZ_REDUCE_SUBGRAPH => 'cluster_<%=block.name%>_reduce_SG',
-
-            :VIZ_LINK => %q/
-            <%=tail%> -> <%=head%>[lhead=<%=subgraph%>] 
-    /,
         }
 end
