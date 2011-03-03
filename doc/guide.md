@@ -1,11 +1,11 @@
 Using Abu
 ===========
 Getting Started
-Tutorial
-Abu Syntax
-Generating Code
-Generating Visualization(s)
+---------------
+### Download and install Abu
 
+Tutorial
+---------------
 Abu has two syntaxes - the original, and the ruby adapted one. As on date, the original is still a WIP, so presented here is the Max temperature example from Hadoop:The Definitive Guide written as a ruby abu script:
 
         job 'MaxTemperature' do
@@ -22,9 +22,9 @@ Abu has two syntaxes - the original, and the ruby adapted one. As on date, the o
 In a bash environment, run the following after downloading Abu:
 
         cd ruby
-        ./abu.sh script.abu /output/dir gen  # to generate java
-        ./abu.sh script.abu /output/dir viz  # to generate a graphviz diagram of your script: Note viz is still being written
-        ./abu.sh script.abu /output/dir gen viz  # to generate both
+        ./abu script.abu /output/dir gen  # to generate java
+        ./abu script.abu /output/dir viz  # to generate a graphviz diagram of your script: Note viz is still being written
+        ./abu script.abu /output/dir gen viz  # to generate both
 
 'gen' produces the following java file:
 
@@ -73,3 +73,38 @@ In a bash environment, run the following after downloading Abu:
             }
         }
 .. which you can then add implementations to, and run in Hadoop.
+
+Similarly running
+
+Abu Syntax
+----------
+Abu scripts consist of two types of statements: jobs and steps. [Note: current code uses 'block's for 'job's, and the terms can be used interchangeably]
+
+A *job* is essentially a function definition. It has a name, some arguments and a body. Job Blocks are used for the main job, and definitions of mapreduce jobs that the main one calls. The following types of jobs are defined in Abu:
+   - job: which stands for the main hadoop job to be invoked. There can be only one per script.
+   - mapreduce: which stands for any grouping of map and reduce steps.
+The general syntax for jobs are:
+	
+	[job|mapreduce] :job_name do
+		<<steps....>>
+	end
+
+A *step* is, obviously, one of the steps within a job.The following steps are defined in Abu:
+
+   - read	: which allows reading of data into the job (allowed only within 'job')
+   - write	: which allows writing of data from the job (allowed only within 'job')
+   - <name>	: where <name> is the name of a defined mapreduce job, and represents invocation of that job (allowed only within 'job')
+   - exec <name>: which is the same as above, except explicitly called out as an execution (allowed only within 'job')
+   - map	: which allows a map operation to be defined for execution (allowed in both job and mapreduce)
+   - reduce	: which allows a reduce operation to be defined for execution (allowed in both job and mapreduce)
+   - hadoop	: which allows invoking existing hadoop jobs from within Abu.
+   - java	: which allows embedding java code into Abu scripts
+   
+  The syntax for each is defined below:
+  * read: 
+  	read 
+   
+Generating Code
+---------------
+Generating Visualization(s)
+---------------------------
