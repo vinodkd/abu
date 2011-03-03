@@ -1,0 +1,16 @@
+            subgraph cluster_<%=block.name%>_map_SG{
+                <%=block.name%>_map_input [shape=Mrecord label="<%=step.k1.name%>:<%=step.k1.type%>|<%=step.v1.name%>:<%=step.v1.type%>"]
+                <%=block.name%>_map [label="map   ", shape=plaintext]
+                <%=block.name%>_map_output [shape=Mrecord label="<outp> <%=step.k2.name%>:<%=step.k2.type%>|<%=step.v2.name%>:<%=step.v2.type%>"]
+                <% if step.using!=''%>
+                <%=step.using%> [shape=component]
+                {rank=same;<%=block.name%>_map;<%=step.using%>}
+                <%end%>
+
+                <%=block.name%>_map_input -> <%=block.name%>_map [style=invis] 
+                <%=block.name%>_map -> <%=block.name%>_map_output[style=invis]
+                <% if step.using!=''%>
+                <%=block.name%>_map -> <%=step.using%>
+                <%end%>
+            }
+    

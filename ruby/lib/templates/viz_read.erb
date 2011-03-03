@@ -1,0 +1,13 @@
+            subgraph <%=block.name%>_read_SG{
+                rank=same
+                <%=block.name%>_read[shape=Mrecord, label="{<%=step.path%>|{<%=step.k1.name%>:<%=step.k1.type%>|<%=step.v1.name%>:<%=step.v1.type%>}}"]
+            <%
+            if step.using!=''
+            %>
+                <%=block.name%>_<%=step.using%> [shape=component]
+                <%=block.name%>_read -> <%=block.name%>_<%=step.using%>[label="using"]'
+            <%
+            end
+            %>
+            }
+    

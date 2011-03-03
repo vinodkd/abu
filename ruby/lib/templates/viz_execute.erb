@@ -1,0 +1,9 @@
+            subgraph <%=block.name%>_<%=step.name%>_execute_SG{
+                rank=same
+                <%=block.name%>_execute_<%=step.name%> [label="Execute <%=step.name%>"]
+                <%=block.name%>_execute_anchor_<%=step.name%> [style=invis shape=point]
+
+                <%=block.name%>_execute_anchor_<%=step.name%> -> <%=step.name%>_anchor[lhead=cluster_<%=step.name%>_SG style=dashed arrowhead=box arrowtail=dot headport=e]
+            }
+
+    

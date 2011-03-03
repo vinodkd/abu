@@ -1,0 +1,13 @@
+            subgraph <%=block.name%>_write_SG{
+                rank=same
+                <%=block.name%>_write[shape=Mrecord, label="{{<%=step.k3.name%>:<%=step.k3.type%>|<%=step.v3.name%>:<%=step.v3.type%>}}"]
+            <%
+            if step.using!=''
+            %>
+                <%=block.name%>_<%=step.using%> [shape=component]
+                <%=block.name%>_write -> <%=block.name%>_<%=step.using%> [label="using"]
+            <%
+            end
+            %>
+            }
+    

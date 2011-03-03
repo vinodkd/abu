@@ -1,0 +1,16 @@
+            subgraph cluster_<%=block.name%>_reduce_SG{
+                <%=block.name%>_reduce_input [shape=Mrecord label="<%=step.k2.name%>:<%=step.k2.type%>|<%=step.v2.name%>:<%=step.v2.type%>"]
+                <%=block.name%>_reduce [label="reduce", shape=plaintext]
+                <%=block.name%>_reduce_output [shape=Mrecord label="<outp> <%=step.k3.name%>:<%=step.k3.type%>|<%=step.v3.name%>:<%=step.v3.type%>"]
+                <%if step.using!=''%>
+                <%=step.using%> [shape=component]
+                {rank=same;<%=block.name%>_reduce;<%=step.using%>}
+                <%end%>
+
+                <%=block.name%>_reduce_input -> <%=block.name%>_reduce [style=invis] 
+                <%=block.name%>_reduce -> <%=block.name%>_reduce_output[style=invis]
+                <% if step.using!=''%>
+                <%=block.name%>_reduce -> <%=step.using%>
+                <%end%>
+            }
+    
