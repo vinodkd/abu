@@ -1,5 +1,8 @@
 Abu Syntax Design 
 ==================
+This document is written like a journal - the older stuff is closer to the top, and the newer stuff is closer to the bottom.
+New sometimes overrides old. You have been warned. The latest state is always at the bottom.
+
 Sample scripts/ Original Ideas
 -------------------------------
 
@@ -328,4 +331,19 @@ this should then:
        - kick off the jobcontrol.run from jruby (or java), and have it call the ruby map/reduce functions as defined below.
    - define the map and reduce via jruby and execute them: this can be done by defining a primordial mapper and reducer that takes the script as a param, executes its map or reduce, and translates its output (to/from writeable & readable) 
     
- 
+### Round 5
+Many ideas from Round 4 have been modified/deprioritized:
+
+* The need to remove quotes is in contradiction with the need to represent the names of the variables themselves, as I experienced recently trying to write some abu scripts. the type name just doesnt convey much meaning. so removing quotes is out, including the name and type as a quoted string is in.
+* removing repetitions is still a nice-to-have, but just that; as is removing exec.
+* representing external jobs in abu: with oozie et al coming to the scene, i'm not sure that abu should try to re-solve that problem. deprioritized. i might write a wrapper for oozie, however.
+
+What I'd really like to get to are:
+* multiple output formats, eg:
+  * output in old java/main mode or in the new Tool/ConfigParser mode
+  * output current detailed visualization or a smaller boxy one for large jobs
+* the jruby version with run
+  * this will be killer in that no more boilerplate would be required
+* learning more algorithms by using abu to compose them.
+  * bonus: add true functions to abu
+  
